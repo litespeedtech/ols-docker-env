@@ -21,11 +21,11 @@ if [ ! -f "./wp-config.php" ]; then
 fi
 
 
-www_uid=$(stat -c "%u" /var/www/vhosts/localhost)
-if [ ${www_uid} -eq 0 ]; then
-    #echo "./sites/localhost is owned by root, auto changing ownership of ./sites/localhost to uid 1000"
-	chown 1000 /var/www/vhosts/localhost -R
-fi
+#www_uid=$(stat -c "%u" /var/www/vhosts/localhost)
+#if [ ${www_uid} -eq 0 ]; then
+#    #echo "./sites/localhost is owned by root, auto changing ownership of ./sites/localhost to uid 1000"
+#	chown 1000 /var/www/vhosts/localhost -R
+#fi
 
 echo "WordPress installation finished."
 exec "$@"
