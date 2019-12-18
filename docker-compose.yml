@@ -1,0 +1,31 @@
+version: '3'
+services:
+  mysql:
+    image: jbergstroem/mariadb-alpine:10.3.17
+    command: --max_allowed_packet=342341144
+    volumes:
+      - "./data/db:/var/lib/mysql:delegated"
+    ports:
+       - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  litespeed:
+    build: ./config/litespeed/${LITESPEED}/
+    env_file:
+      - .env
+    volumes:
+        - ./sites:/var/www/vhosts/
+    ports:
+      - 80:80
+      - 443:443
+      - 7080:7080
+    restart: always
+  adminer:
+    image: dockette/adminer:full
+    ports:
+      - 8080:80
+    environment:
+      - MEMORY=-1
