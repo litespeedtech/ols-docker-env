@@ -17,7 +17,7 @@ services:
     env_file:
       - .env
     volumes:
-        - ./sites:/var/www/vhosts/
+        - ./sites:/var/www/html/
     ports:
       - 80:80
       - 443:443

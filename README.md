@@ -1,4 +1,8 @@
 # OpenLiteSpeed WordPress Docker Container (beta)
+[![Build Status](https://travis-ci.com/litespeedtech/ols-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/openlitespeed)
+[![OpenLiteSpeed](https://img.shields.io/badge/openlitespeed-1.5.10-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
+[![docker pulls](https://img.shields.io/docker/pulls/litespeed/openlitespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
+
 Lightweight WordPress container with OpenLiteSpeed 1.5.10 & PHP 7.3 based on Ubuntu 18.04 Linux.
 
 WordPress version will install: Latest
