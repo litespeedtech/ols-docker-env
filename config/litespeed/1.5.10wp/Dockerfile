@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y wget && \
     apt-get install -y curl mysql-client \
     lsphp73 lsphp73-mysql lsphp73-opcache lsphp73-curl
 
-RUN echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php ${WEB_ADMIN})" \
+RUN echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php ${WEB_ADMIN_PASSWORD})" \
     > /usr/local/lsws/admin/conf/htpasswd
 
 EXPOSE 7080

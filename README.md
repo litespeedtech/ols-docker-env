@@ -40,6 +40,7 @@ Running with daemon mode
 ```
 docker-compose up -d
 ```
+Running with start method
 ```
 docker-compose start
 ```
@@ -58,3 +59,11 @@ docker-compose down
 You can also visit http://127.0.0.1:8080 to access Data Base after starting the containers.
 
 The default username is root, and the password is the same as supplied in the .env file.
+
+## Support & Feedback
+If you still have a question after using OpenLiteSpeed Docker, you have a few options.
+* Join [the GoLiteSpeed Slack community](litespeedtech.com/slack) for real-time discussion
+* Post to [the OpenLiteSpeed Forums](https://forum.openlitespeed.org/) for community support
+* Reporting any issue on [Github ols-docker-env](https://github.com/litespeedtech/ols-docker-env/issues) project
+
+**Pull requests are always welcome**
