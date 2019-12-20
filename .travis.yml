@@ -1,4 +1,5 @@
 language: bash
+
 sudo: 'required'
 
 notifications:
@@ -22,7 +23,13 @@ install:
   - docker-compose up -d
 
 before_script:
-  - curl http://localhost:80/
+  - docker image ls
+  - docker ps
+  - curl -Ik http://localhost:80/
+
+after_script:
+  - docker-compose stop
+  - docker-compose rm -f
 
 #after_success:
 #  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then

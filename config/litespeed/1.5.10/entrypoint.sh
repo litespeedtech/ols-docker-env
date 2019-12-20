@@ -1,15 +1,17 @@
 #!/bin/bash
-cd localhost/html
+cd /var/www/html
 if [ ! -f "./wp-config.php" ]; then
 	# su -s /bin/bash www-data -c
     COUNTER=0
 	until [ "$(curl -v mysql:3306 2>&1 | grep native)" ];
 	do
+	    echo "Counter: ${COUNTER}"
 		COUNTER=$((COUNTER+1))
 		if [ ${COUNTER} = 10 ]; then
 			echo '--- MySQL is starting, please wait... ---'
 		elif [ ${COUNTER} = 100 ]; then	
 		    echo '--- MySQL is timeout, exit! ---'
+			exit 1
 		fi
 		sleep 1
 	done
@@ -33,7 +35,7 @@ if [ ! -f "./wp-config.php" ]; then
 		--skip-email \
 		--allow-root 
 	wp plugin install litespeed-cache \
-	    --activate
+	    --activate \
 	    --allow-root 
 fi
 

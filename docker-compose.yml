@@ -18,12 +18,14 @@ services:
       - .env
     volumes:
         - ./sites:/var/www/html/
+        - ./sites:/usr/local/lsws/Example/logs/access.log
+        - ./sites/logs:/usr/local/lsws/logs/
     ports:
       - 80:80
       - 443:443
       - 7080:7080
     environment:
-      - WEB_ADMIN_PASSWORD=${WEB_ADMIN_PASSWORD}
+      WEB_ADMIN_PASSWORD: ${WEB_ADMIN_PASSWORD}
     restart: always
   adminer:
     image: dockette/adminer:full
