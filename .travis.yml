@@ -25,6 +25,8 @@ install:
 before_script:
   - docker image ls
   - docker ps
+  - docker inspect ols-docker-env_litespeed
+  - sleep 15
   - curl -Ik http://localhost:80/
 
 after_script:
