@@ -13,7 +13,8 @@ env:
   - DOCKER_COMPOSE_VERSION=1.25.0
 
 before_install:
-  - './.travis/main.sh'
+  - chmod +x ./.travis/main.sh
+  - ./.travis/main.sh
 
 install:
   - git clone https://github.com/litespeedtech/ols-docker-env.git
