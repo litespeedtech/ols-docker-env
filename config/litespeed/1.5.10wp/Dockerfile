@@ -1,13 +1,12 @@
 #FROM debian:jessie-slim
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get install -y wget && \
-    wget https://openlitespeed.org/preuse/openlitespeed-1.5.10.tgz && \
-    tar xzvf openlitespeed-1.5.10.tgz && cd openlitespeed && \
-    ./install.sh && \
-    rm -rf /openlitespeed && \
-    apt-get install -y curl mysql-client \
-    lsphp73 lsphp73-mysql lsphp73-opcache lsphp73-curl
+RUN apt-get update && apt-get install wget curl -y
+
+RUN wget https://openlitespeed.org/preuse/openlitespeed-1.5.10.tgz && \
+    tar xzvf openlitespeed-1.5.10.tgz && cd openlitespeed && ./install.sh && rm -rf /openlitespeed
+
+RUN apt-get install mysql-client lsphp73 lsphp73-mysql lsphp73-opcache lsphp73-curl lsphp73-json -y
 
 RUN echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php ${WEB_ADMIN_PASSWORD})" \
     > /usr/local/lsws/admin/conf/htpasswd

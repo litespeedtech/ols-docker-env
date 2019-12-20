@@ -1,4 +1,5 @@
 language: bash
+sudo: 'required'
 
 notifications:
   email:
@@ -12,14 +13,21 @@ env:
   - DOCKER_COMPOSE_VERSION=1.25.0
 
 before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
+  - './.travis/main.sh'
 
 install:
-  - docker images
+  - git clone https://github.com/litespeedtech/ols-docker-env.git
+  - docker-compose build
+  - docker-compose up -d
 
+before_script:
+  - curl http://localhost:80/
+
+#after_success:
+#  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+#      docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
+#      make push-image ;
+#    fi
 
 
 
