@@ -44,6 +44,12 @@ Running with start method
 ```
 docker-compose start
 ```
+
+Running start after config changing
+```
+docker-compose up --build
+```
+
 ### Stopping containers
 ```
 docker-compose stop
