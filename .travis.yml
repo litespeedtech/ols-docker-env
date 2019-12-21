@@ -32,17 +32,17 @@ script:
   - curl -Ik http://localhost:80/
   - curl -Ik http://localhost:443/
 
-#after_script:
-#  - docker-compose stop
-#  - docker-compose rm -f
-
 after_success:
   - echo 'AFTER_SUCCESS'
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
-      docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD} ;
+  - docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
       #echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      docker push litespeed/openlitespeed-beta ;
-    fi
+  - docker push litespeed/openlitespeed-beta
+
+after_script:
+  - docker-compose stop
+  - docker-compose rm -f
+
+
 
 
 
