@@ -5,11 +5,9 @@ sudo: 'required'
 notifications:
   email:
     if: branch = master
-    recipients:
-      - eleu@litespeedtech.com
-      - larsh2690@hotmail.com
     on_success: always
     on_failure: always
+  slack: golitespeed:${SLACK_ALERT}
 
 services:
   - docker
