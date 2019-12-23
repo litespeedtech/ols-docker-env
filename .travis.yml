@@ -7,7 +7,9 @@ notifications:
     if: branch = master
     on_success: always
     on_failure: always
-  slack: golitespeed:${SLACK_ALERT}
+  slack:
+    rooms:
+      - golitespeed:${SLACK_ALERT}#docker-alert
     if: branch = master
     on_success: always
     on_failure: always
