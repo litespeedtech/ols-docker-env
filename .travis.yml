@@ -8,6 +8,9 @@ notifications:
     on_success: always
     on_failure: always
   slack: golitespeed:${SLACK_ALERT}
+    if: branch = master
+    on_success: always
+    on_failure: always
 
 services:
   - docker
