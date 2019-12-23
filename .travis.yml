@@ -4,7 +4,11 @@ sudo: 'required'
 
 notifications:
   email:
-    on_success: never
+    if: branch = master
+    recipients:
+      - eleu@litespeedtech.com
+      - larsh2690@hotmail.com
+    on_success: always
     on_failure: always
 
 services:
@@ -24,6 +28,7 @@ install:
 
 before_script:
   - docker image ls
+  - sleep 15
 
 script:  
   - curl -Ik http://localhost:80/
