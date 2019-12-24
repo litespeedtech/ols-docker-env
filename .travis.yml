@@ -9,8 +9,9 @@ notifications:
     secure: mSj4SYM4weApU3Ct+nqdaHkLw0J/q5+VH1q0LYnviZ06UpRU/N6lricfu9ihgND2VJ+cwfuQpAegdI1cDFzxDRpZpnzU9Db4N7OW5cDkb8eHpy6XhjQYi5KqWfgamh2UwiqYGgoQBc4gXhGDlChjJQopM+qPesHO9y/ucFAjxdlkEHVdZKNYDiVfiOKCGBzDuP+PbOPiZiqQFBgmFs1YLLrrQ7y5dgdoiai2I72MAN0kngoNB9ZsUgtQ63WTdgPKJOiX+oQMMXgYoP0+9iIhS6/cKHs64Z7jPreYYuWWMTnQPdvaIgh4ASIhUE6FVI5SdFxmajVik8SMlRK1rQApQLJ9wOJammUJHCSI4jfEVQ5H2og9R3+BA0qspBQVZXMTCYfX10Up1tmL+Kev1Za335v2z046gzX4aTiWBxi1I9mYmnYKQiGuaIG5crkPodIAeS9HX/DulMUhPRpa0Djwi7ZJlCAzfuEGDgAlWt/oWfIw66unTY/G6cEaxeEbZ3Ho+bPy48dRxhYW5kRHR1OuHqqfNULYeAGm6AIF3ng+2GjvXh6rhqmstBh/myROqM3X7ofUzEJRo9ow+hDroZLE4mfavn4UAnQybN7FfzuJiOoYTmcws7JzYD8b/G+Aynjw04m0ojDDJN0fVgQ+qltMoCfFMhx8FscF/QjGo/T/zc4=
     template:
       - "Repo %{repository_slug} *%{result}* build (<%{build_url}|#%{build_number}>) for commit (<%{compare_url}|%{commit}>) on branch %{branch}."
+      - "_%{commit_message}_"
       - "Execution time: *%{duration}*"
-      - "Message: %{message}"
+      - "Message: *%{message}*"
     on_success: always
 
 services:
