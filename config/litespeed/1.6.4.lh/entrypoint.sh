@@ -1,4 +1,5 @@
 #!/bin/bash
+chown 999:999 /usr/local/lsws/conf -R
 cd /var/www/vhosts/localhost/html
 if [ ! -f "./wp-config.php" ]; then
 	# su -s /bin/bash www-data -c
@@ -36,15 +37,19 @@ if [ ! -f "./wp-config.php" ]; then
 		--allow-root 
 	wp plugin install litespeed-cache \
 	    --activate \
-	    --allow-root 
+	    --allow-root
+	first_www_uid=$(stat -c "%u" /var/www/vhosts/localhost)
+	first_www_gid=$(stat -c "%g" /var/www/vhosts/localhost)
+	chown $first_www_uid:$first_www_gid /var/www/vhosts/localhost -R
+
 fi
 
 
-#www_uid=$(stat -c "%u" /var/www/vhosts/localhost)
-#if [ ${www_uid} -eq 0 ]; then
-#    #echo "./sites/localhost is owned by root, auto changing ownership of ./sites/localhost to uid 1000"
-#	chown 1000 /var/www/vhosts/localhost -R
-#fi
+www_uid=$(stat -c "%u" /var/www/vhosts/localhost)
+if [ ${www_uid} -eq 0 ]; then
+    #echo "./sites/localhost is owned by root, auto changing ownership of ./sites/localhost to uid 1000"
+    chown 1000:1000 /var/www/vhosts/localhost -R
+fi
 
 echo "WordPress installation finished."
 exec "$@"

@@ -14,7 +14,7 @@ RUN apt-get install mysql-client lsphp73 lsphp73-mysql lsphp73-opcache lsphp73-c
 EXPOSE 7080
 
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
-	chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp && \
+	chmod +x wp-cli.phar && mv wp-cli.phar /usr/bin/wp && \
 	ln -s /usr/local/lsws/lsphp73/bin/php7.3 /usr/bin/php
 
 

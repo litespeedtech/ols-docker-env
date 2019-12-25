@@ -228,15 +228,24 @@ listener HTTP {
 vhTemplate centralConfigLog {
   templateFile            conf/templates/ccl.conf
   listeners               Default, HTTP
+  member example4.com {
+    vhDomain              example4.com
+  }
+  member example3.com {
+    vhDomain              example3.com
+  }
+  note                    test test
+
+  member example2.com {
+    vhDomain              example2.com
+  }
 
   member example6.com {
     vhDomain              example6.com
   }
-  member example5.com {
-    vhDomain              example5.com
-  }
-  member example2.com {
-    vhDomain              example2.com
+
+  member localhost {
+    vhDomain              localhost
   }
 }
 
