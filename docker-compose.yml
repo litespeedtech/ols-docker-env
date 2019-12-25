@@ -18,9 +18,10 @@ services:
     env_file:
       - .env
     volumes:
-        - ./sites:/var/www/html/
-        - ./sites:/usr/local/lsws/Example/logs/access.log
-        - ./sites/logs:/usr/local/lsws/logs/
+        - ./conf:/usr/local/lsws/conf
+        - ./bin/container:/usr/local/bin
+        - ./sites:/var/www/vhosts/
+        - ./logs:/usr/local/lsws/logs/
     ports:
       - 80:80
       - 443:443
@@ -34,3 +35,5 @@ services:
       - 8080:80
     environment:
       - MEMORY=-1
+volumes:
+  litespeed_conf:
