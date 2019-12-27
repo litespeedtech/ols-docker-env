@@ -3,8 +3,8 @@ CONT_NAME='litespeed'
 
 help_message(){
     echo 'Command [-add|-del] [domain_name]'
-    echo 'Example: domain.sh -add example.com'
-    echo 'Example: domain.sh -del example.com'
+    echo 'Example 1: domain.sh -add example.com'
+    echo 'Example 2: domain.sh -del example.com'
 }
 
 check_input(){
