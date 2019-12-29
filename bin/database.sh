@@ -5,7 +5,7 @@ DOMAIN=''
 SQL_DB=''
 SQL_USER=''
 SQL_PASS=''
-ANY='%'
+ANY="'%'"
 
 help_message(){
     echo 'Command [-domain xxx]'
@@ -29,9 +29,9 @@ specify_name(){
 }
 
 auto_name(){
-    SQL_DB=${TRANSNAME}
-    SQL_USER=${TRANSNAME}
-    SQL_PASS=${RANDOM_PASS}
+    SQL_DB="${TRANSNAME}"
+    SQL_USER="${TRANSNAME}"
+    SQL_PASS="'${RANDOM_PASS}'"
 }
 
 gen_pass(){
@@ -43,9 +43,9 @@ trans_name(){
 }
 
 display_credential(){
-    echo Database: ${SQL_DB}
-    echo Username: ${SQL_USER}
-    echo Password: ${SQL_PASS}
+    echo "Database: ${SQL_DB}"
+    echo "Username: ${SQL_USER}"
+    echo "Password: $(echo ${SQL_PASS} | tr -d "'")"
     exit 0
 }
 
@@ -62,10 +62,10 @@ check_db_access(){
 }
 
 db_setup(){  
-    docker-compose exec mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
-    -e 'CREATE DATABASE ${SQL_DB};' \
-    -e 'GRANT ALL PRIVILEGES ON ${SQL_DB}.* TO ${SQL_USER}@${ANY} IDENTIFIED BY ${SQL_PASS};' \
-    -e 'FLUSH PRIVILEGES;'"
+    docker-compose exec mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+    -e "CREATE DATABASE '${SQL_DB}';" \
+    -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
+    -e "FLUSH PRIVILEGES;"'
 }
 
 auto_setup_main(){
@@ -96,10 +96,10 @@ while [ ! -z "${1}" ]; do
             SQL_USER="${1}"
             ;;
         -p | -P | -password) shift
-            SQL_PASS="${1}"
+            SQL_PASS="'${1}'"
             ;;            
         -db | -DB | -database) shift
-            SQL_PDB="${1}"
+            SQL_DB="${1}"
             ;;            
         *) 
             help_message
@@ -108,7 +108,7 @@ while [ ! -z "${1}" ]; do
     shift
 done
 
-if [ ${DOMAIN} = '' ]; then
+if [ "${DOMAIN}" = '' ]; then
     specify_setup_main
 else
     auto_setup_main
