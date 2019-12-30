@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source .env
-echo "MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}"
+
 DOMAIN=''
 SQL_DB=''
 SQL_USER=''
