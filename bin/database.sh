@@ -6,6 +6,7 @@ SQL_DB=''
 SQL_USER=''
 SQL_PASS=''
 ANY="'%'"
+SET_OK=0
 
 help_message(){
     echo 'Command [-domain xxx]'
@@ -43,9 +44,11 @@ trans_name(){
 }
 
 display_credential(){
-    echo "Database: ${SQL_DB}"
-    echo "Username: ${SQL_USER}"
-    echo "Password: $(echo ${SQL_PASS} | tr -d "'")"
+    if [ ${SET_OK} = 0 ]; then
+        echo "Database: ${SQL_DB}"
+        echo "Username: ${SQL_USER}"
+        echo "Password: $(echo ${SQL_PASS} | tr -d "'")"
+    fi    
     exit 0
 }
 
@@ -54,7 +57,8 @@ add_sql_client(){
 }
 
 check_db_access(){
-    docker-compose exec mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'"
+    add_sql_client
+    docker-compose exec mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     if [ ${?} != 0 ]; then
         echo "DB access failed, please check!"
         exit 1
@@ -66,6 +70,7 @@ db_setup(){
     -e "CREATE DATABASE '${SQL_DB}';" \
     -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
     -e "FLUSH PRIVILEGES;"'
+    SET_OK=${?}
 }
 
 auto_setup_main(){
@@ -73,12 +78,14 @@ auto_setup_main(){
     gen_pass
     trans_name ${DOMAIN}
     auto_name
+    check_db_access
     db_setup
     display_credential
 }
 
 specify_setup_main(){
     specify_name
+    check_db_access
     db_setup
     display_credential
 }
