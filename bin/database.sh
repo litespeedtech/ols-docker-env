@@ -49,7 +49,21 @@ display_credential(){
         echo "Username: ${SQL_USER}"
         echo "Password: $(echo ${SQL_PASS} | tr -d "'")"
     fi    
-    exit 0
+}
+
+store_credential(){
+    if [ -d "./sites/${1}" ]; then
+        if [ -f ./sites/${1}/.db_pass ]; then 
+            mv ./sites/${1}/.db_pass ./sites/${1}/.db_pass.bk
+        fi
+        cat > "./sites/${1}/.db_pass" << EOT
+"Database":"${SQL_DB}" 
+"Username":"${SQL_USER}"
+"Password":"$(echo ${SQL_PASS} | tr -d "'")"
+EOT
+    else
+        echo "./sites/${1} not found, abort credential store!"
+    fi    
 }
 
 add_sql_client(){
@@ -81,6 +95,7 @@ auto_setup_main(){
     check_db_access
     db_setup
     display_credential
+    store_credential ${DOMAIN}
 }
 
 specify_setup_main(){
@@ -88,6 +103,7 @@ specify_setup_main(){
     check_db_access
     db_setup
     display_credential
+    store_credential ${DOMAIN}
 }
 
 check_input ${1}
@@ -115,7 +131,7 @@ while [ ! -z "${1}" ]; do
     shift
 done
 
-if [ "${DOMAIN}" = '' ]; then
+if [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ]; then
     specify_setup_main
 else
     auto_setup_main
