@@ -38,7 +38,7 @@ get_owner(){
 }
 
 get_db_pass(){
-    if [ ${VH_DOC_ROOT}/.db_pass ]; then
+    if [ -f ${DEFAULT_VH_ROOT}/${1}/.db_pass ]; then
 	    SQL_DB=$(grep -i Database ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
         SQL_USER=$(grep -i Username ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
         SQL_PASS=$(grep -i Password ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
@@ -74,7 +74,7 @@ check_sql_native(){
 }
 
 preinstall_wordpress(){
-	get_db_pass
+	get_db_pass ${DOMAIN}
 	if [ ! -f ${VH_DOC_ROOT}/wp-config.php ] && [ -f ${VH_DOC_ROOT}/wp-config-sample.php ]; then
 		cp ${VH_DOC_ROOT}/wp-config-sample.php ${VH_DOC_ROOT}/wp-config.php
 		NEWDBPWD="define('DB_PASSWORD', '${SQL_PASS}');"
