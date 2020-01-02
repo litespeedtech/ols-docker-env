@@ -10,7 +10,7 @@ if [ ! -f "./wp-config.php" ]; then
 		COUNTER=$((COUNTER+1))
 		if [ ${COUNTER} = 10 ]; then
 			echo '--- MySQL is starting, please wait... ---'
-		elif [ ${COUNTER} = 100 ]; then	
+		elif [ ${COUNTER} = 60 ]; then	
 		    echo '--- MySQL is timeout, exit! ---'
 			exit 1
 		fi
@@ -43,7 +43,6 @@ if [ ! -f "./wp-config.php" ]; then
 	chown $first_www_uid:$first_www_gid /var/www/vhosts/localhost -R
 
 fi
-
 
 www_uid=$(stat -c "%u" /var/www/vhosts/localhost)
 if [ ${www_uid} -eq 0 ]; then

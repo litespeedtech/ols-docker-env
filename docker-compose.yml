@@ -1,8 +1,8 @@
 version: '3'
 services:
   mysql:
-    image: jbergstroem/mariadb-alpine:10.3.17
-    command: --max_allowed_packet=342341144
+    image: mariadb
+    command: --max_allowed_packet=256M
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
     ports:
@@ -35,5 +35,3 @@ services:
       - 8080:80
     environment:
       - MEMORY=-1
-volumes:
-  litespeed_conf:
