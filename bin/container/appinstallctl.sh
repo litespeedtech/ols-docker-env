@@ -1,6 +1,7 @@
 #!/bin/bash
 DEFAULT_VH_ROOT='/var/www/vhosts'
 VH_DOC_ROOT=''
+VHNAME=''
 APP_NAME=''
 DOMAIN=''
 WWW_UID=''
@@ -9,7 +10,7 @@ PUB_IP=$(curl http://checkip.amazonaws.com)
 
 help_message(){
     echo 'Command [-app app_name] [-domain domain_name]'
-    echo 'Example: download.sh -app wordpress -d example.com'
+    echo 'Example: appinstallctl.sh -app wordpress -d example.com'
 }
 
 check_input(){
@@ -38,17 +39,19 @@ get_owner(){
 }
 
 get_db_pass(){
-    if [ -f ${DEFAULT_VH_ROOT}/${1}/.db_pass ]; then
-	    SQL_DB=$(grep -i Database ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
-        SQL_USER=$(grep -i Username ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
-        SQL_PASS=$(grep -i Password ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
-    else
-	    echo 'DB_PASS can not locate!'
+	if [ -f ${DEFAULT_VH_ROOT}/${1}/.db_pass ]; then
+		SQL_DB=$(grep -i Database ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
+		SQL_USER=$(grep -i Username ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
+		SQL_PASS=$(grep -i Password ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
+	else
+		echo 'DB_PASS can not locate!'
 	fi
 }
 
 set_vh_docroot(){
-	if [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
+	if [ "${VHNAME}" != '' ]; then
+	    VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}/html"
+	elif [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
         VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${1}/html"
 	else
 	    echo "${DEFAULT_VH_ROOT}/${1}/html does not exist, please add domain first! Abort!"
@@ -57,16 +60,15 @@ set_vh_docroot(){
 }
 
 check_sql_native(){
-    local COUNTER=0
+	local COUNTER=0
 	local LIMIT_NUM=100
-	until [ "$(curl -v mysql:3306 2>&1 | grep native)" ];
-	do
-	    echo "Counter: ${COUNTER}/${LIMIT_NUM}"
+	until [ "$(curl -v mysql:3306 2>&1 | grep native)" ]; do
+		echo "Counter: ${COUNTER}/${LIMIT_NUM}"
 		COUNTER=$((COUNTER+1))
 		if [ ${COUNTER} = 10 ]; then
 			echo '--- MySQL is starting, please wait... ---'
 		elif [ ${COUNTER} = ${LIMIT_NUM} ]; then	
-		    echo '--- MySQL is timeout, exit! ---'
+			echo '--- MySQL is timeout, exit! ---'
 			exit 1
 		fi
 		sleep 1
@@ -84,12 +86,12 @@ preinstall_wordpress(){
 		NEWDBPWD="define('DB_NAME', '${SQL_DB}');"
 		linechange 'DB_NAME' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 	elif [ -f ${VH_DOC_ROOT}/wp-config.php ]; then
-	    echo "${VH_DOC_ROOT}/wp-config.php already exist, exit !"
+		echo "${VH_DOC_ROOT}/wp-config.php already exist, exit !"
 		exit 1
 	else
-	    echo 'Skip!'
+		echo 'Skip!'
 		exit 2
-    fi    
+	fi    
 }
 
 app_wordpress_dl(){
@@ -108,34 +110,37 @@ main(){
 	get_owner
 	cd ${VH_DOC_ROOT}
 	if [ "${APP_NAME}" = 'wordpress' ] || [ "${APP_NAME}" = 'wp' ]; then
-	    check_sql_native
-	    app_wordpress_dl
+		check_sql_native
+		app_wordpress_dl
 		preinstall_wordpress
 		exit 0
 	else
-	    echo "APP: ${APP_NAME} not support, exit!"
+		echo "APP: ${APP_NAME} not support, exit!"
 		exit 1	
 	fi
 }
 
 while [ ! -z "${1}" ]; do
-    case ${1} in
-        -[hH] | -help | --help)
-            help_message
-            ;;
-        -app | -a | -A) shift
-            check_input "${1}"
-            APP_NAME="${1}"
-            ;;
-        -d | -D | -domain) shift
-            check_input "${1}"
-            DOMAIN="${1}"
+	case ${1} in
+		-[hH] | -help | --help)
+			help_message
+			;;
+		-app | -a | -A) shift
+			check_input "${1}"
+			APP_NAME="${1}"
+			;;
+		-d | -D | -domain) shift
+			check_input "${1}"
+			DOMAIN="${1}"
 			set_vh_docroot ${DOMAIN}
-            ;;          
-        *) 
-            help_message
-            ;;              
-    esac
-    shift
+			;;
+		-vhname) shift
+			VHNAME="${1}"
+			;;	       
+		*) 
+			help_message
+			;;              
+	esac
+	shift
 done
 main

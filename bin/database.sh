@@ -10,9 +10,9 @@ SET_OK=0
 
 help_message(){
     echo 'Command [-domain xxx]'
-    echo 'Command [-user xxx] [-password xxx] [-database xxx]'
+    echo 'Command [-domain xxx] [-user xxx] [-password xxx] [-database xxx]'
     echo 'Example 1: database.sh -domain example.com'
-    echo 'Example 2: domain.sh -user USERNAME -password PASSWORD -database DATABASENAME'
+    echo 'Example 2: database.sh -domain example.com -user USERNAME -password PASSWORD -database DATABASENAME'
     echo 'Script will auto assign database & username by the domain and random password for example 1'
 }
 
@@ -71,7 +71,7 @@ add_sql_client(){
 }
 
 check_db_access(){
-    add_sql_client
+    #add_sql_client
     docker-compose exec mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     if [ ${?} != 0 ]; then
         echo "DB access failed, please check!"

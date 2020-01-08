@@ -4,7 +4,7 @@ DOMAIN=''
 
 help_message(){
     echo 'Command [-app app_name] [-domain domain_name]'
-    echo 'Example: download.sh -app wordpress -d example.com'
+    echo 'Example: appinstall.sh -app wordpress -d example.com'
 }
 
 check_input(){
@@ -15,7 +15,7 @@ check_input(){
 }
 
 app_download(){
-    docker-compose exec litespeed su -c "downloadctl.sh -app ${1} -domain ${2}"
+    docker-compose exec litespeed su -c "appinstallctl.sh -app ${1} -domain ${2}"
     exit 0
 }
 
