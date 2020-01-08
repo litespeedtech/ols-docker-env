@@ -9,9 +9,6 @@ RUN wget https://openlitespeed.org/preuse/openlitespeed-1.6.4.tgz && \
 RUN apt-get install mysql-client lsphp73 lsphp73-common lsphp73-mysql lsphp73-opcache \
     lsphp73-curl lsphp73-json lsphp73-imagick lsphp73-redis lsphp73-memcached -y
 
-#RUN echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php ${WEB_ADMIN_PASSWORD})" \
-#    > /usr/local/lsws/admin/conf/htpasswd
-
 EXPOSE 7080
 
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
