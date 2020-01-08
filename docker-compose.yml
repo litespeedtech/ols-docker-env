@@ -13,8 +13,12 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   litespeed:
-    build: ./config/litespeed/${LITESPEED}/
-    image: litespeedtech/openlitespeed-beta:latest
+    build:                                                                                                             
+      context: ./config/litespeed/${LITESPEED}/                                                                        
+      args:
+        extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
+                                                                                     
+    image: litespeedtech/openlitespeed-beta:travis
     env_file:
       - .env
     volumes:
@@ -26,8 +30,6 @@ services:
       - 80:80
       - 443:443
       - 7080:7080
-    environment:
-      WEB_ADMIN_PASSWORD: ${WEB_ADMIN_PASSWORD}
     restart: always
   adminer:
     image: dockette/adminer:full
