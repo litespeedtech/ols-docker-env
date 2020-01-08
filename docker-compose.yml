@@ -16,13 +16,14 @@ services:
     build:                                                                                                             
       context: ./config/litespeed/${LITESPEED}/                                                                        
       args:
-        extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
-                                                                                     
+              #extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
+        extensions:                                                                             
     image: litespeedtech/openlitespeed-beta:travis
     env_file:
       - .env
     volumes:
-        - ./conf:/usr/local/lsws/conf
+        - ./lsws/conf:/usr/local/lsws/conf
+        - ./lsws/admin-conf:/usr/local/lsws/admin/conf
         - ./bin/container:/usr/local/bin
         - ./sites:/var/www/vhosts/
         - ./logs:/usr/local/lsws/logs/

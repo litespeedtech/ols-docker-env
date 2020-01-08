@@ -1,5 +1,6 @@
 #!/bin/bash
 chown 999:999 /usr/local/lsws/conf -R
+chown 999:1000 /usr/local/lsws/admin/conf -R
 cd /var/www/vhosts/localhost/html
 if [ ! -f "./wp-config.php" ]; then
 	# su -s /bin/bash www-data -c
