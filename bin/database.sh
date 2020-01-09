@@ -106,6 +106,14 @@ specify_setup_main(){
     store_credential ${DOMAIN}
 }
 
+main(){
+    if [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ]; then
+        specify_setup_main
+    else
+        auto_setup_main
+    fi
+}
+
 check_input ${1}
 while [ ! -z "${1}" ]; do
     case ${1} in
@@ -130,9 +138,4 @@ while [ ! -z "${1}" ]; do
     esac
     shift
 done
-
-if [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ]; then
-    specify_setup_main
-else
-    auto_setup_main
-fi
+main

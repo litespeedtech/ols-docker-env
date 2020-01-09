@@ -29,7 +29,7 @@ while [ ! -z "${1}" ]; do
             help_message
             ;;       
         *) 
-            main
+            main ${1}
             ;;              
     esac
     shift

@@ -19,6 +19,11 @@ app_download(){
     exit 0
 }
 
+main(){
+    app_download ${APP_NAME} ${DOMAIN}
+}
+
+check_input ${1}
 while [ ! -z "${1}" ]; do
     case ${1} in
         -[hH] | -help | --help)
@@ -39,4 +44,4 @@ while [ ! -z "${1}" ]; do
     shift
 done
 
-app_download ${APP_NAME} ${DOMAIN}
+main
