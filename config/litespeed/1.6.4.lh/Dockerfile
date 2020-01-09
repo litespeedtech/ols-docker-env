@@ -15,6 +15,11 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 	chmod +x wp-cli.phar && mv wp-cli.phar /usr/bin/wp && \
 	ln -s /usr/local/lsws/lsphp73/bin/php7.3 /usr/bin/php
 
+RUN apt-get install -y software-properties-common && \
+    add-apt-repository universe && \
+    add-apt-repository ppa:certbot/certbot && \
+    apt-get update && \
+    apt-get install -y certbot python-certbot-apache
 
 RUN rm -rf /usr/local/lsws/conf
 ADD conf /usr/local/lsws/conf
