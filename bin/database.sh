@@ -57,7 +57,7 @@ store_credential(){
             mv ./sites/${1}/.db_pass ./sites/${1}/.db_pass.bk
         fi
         cat > "./sites/${1}/.db_pass" << EOT
-"Database":"${SQL_DB}" 
+"Database":"${SQL_DB}"
 "Username":"${SQL_USER}"
 "Password":"$(echo ${SQL_PASS} | tr -d "'")"
 EOT

@@ -11,6 +11,7 @@ PUB_IP=$(curl http://checkip.amazonaws.com)
 help_message(){
     echo 'Command [-app app_name] [-domain domain_name]'
     echo 'Example: appinstallctl.sh -app wordpress -d example.com'
+	exit 0
 }
 
 check_input(){
@@ -40,9 +41,9 @@ get_owner(){
 
 get_db_pass(){
 	if [ -f ${DEFAULT_VH_ROOT}/${1}/.db_pass ]; then
-		SQL_DB=$(grep -i Database ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
-		SQL_USER=$(grep -i Username ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
-		SQL_PASS=$(grep -i Password ${VH_DOC_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
+		SQL_DB=$(grep -i Database ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
+		SQL_USER=$(grep -i Username ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
+		SQL_PASS=$(grep -i Password ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
 	else
 		echo 'DB_PASS can not locate!'
 	fi
@@ -50,8 +51,10 @@ get_db_pass(){
 
 set_vh_docroot(){
 	if [ "${VHNAME}" != '' ]; then
+	    VH_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}"
 	    VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}/html"
 	elif [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
+	    VH_ROOT="${DEFAULT_VH_ROOT}/${1}"
         VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${1}/html"
 	else
 	    echo "${DEFAULT_VH_ROOT}/${1}/html does not exist, please add domain first! Abort!"
@@ -76,7 +79,11 @@ check_sql_native(){
 }
 
 preinstall_wordpress(){
-	get_db_pass ${DOMAIN}
+	if [ "${VHNAME}" != '' ]; then
+	    get_db_pass ${VHNAME}
+	else
+		get_db_pass ${DOMAIN}
+	fi	
 	if [ ! -f ${VH_DOC_ROOT}/wp-config.php ] && [ -f ${VH_DOC_ROOT}/wp-config-sample.php ]; then
 		cp ${VH_DOC_ROOT}/wp-config-sample.php ${VH_DOC_ROOT}/wp-config.php
 		NEWDBPWD="define('DB_PASSWORD', '${SQL_PASS}');"
@@ -85,6 +92,8 @@ preinstall_wordpress(){
 		linechange 'DB_USER' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 		NEWDBPWD="define('DB_NAME', '${SQL_DB}');"
 		linechange 'DB_NAME' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
+        NEWDBPWD="define('DB_HOST', '${PUB_IP}');"
+		linechange 'DB_HOST' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 	elif [ -f ${VH_DOC_ROOT}/wp-config.php ]; then
 		echo "${VH_DOC_ROOT}/wp-config.php already exist, exit !"
 		exit 1
@@ -98,10 +107,14 @@ app_wordpress_dl(){
 	if [ ! -f "${VH_DOC_ROOT}/wp-config.php" ] && [ ! -f "${VH_DOC_ROOT}/wp-config-sample.php" ]; then
 		wp core download \
 			--allow-root \
-			--force
-		chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
+			--quiet
+		if [ "${VHNAME}" != '' ]; then
+		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${VHNAME} 
+		else
+		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
+		fi
 	else
-	    echo 'wp-config*.php	already exist, abort!'
+	    echo 'wp-config*.php already exist, abort!'
 		exit 1
 	fi
 }

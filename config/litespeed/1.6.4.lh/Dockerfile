@@ -27,6 +27,6 @@ RUN chown 999:999 /usr/local/lsws/conf -R
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
-WORKDIR /var/www/html/
+WORKDIR /var/www/vhosts/
 CMD ["/usr/local/lsws/bin/openlitespeed","-n"]
 
