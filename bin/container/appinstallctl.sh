@@ -29,8 +29,8 @@ linechange(){
 }
 
 get_owner(){
-	WWW_UID=$(stat -c "%u" ${DEFAULT_VH_ROOT}/${1})
-	WWW_GID=$(stat -c "%g" ${DEFAULT_VH_ROOT}/${1})
+	WWW_UID=$(stat -c "%u" ${DEFAULT_VH_ROOT})
+	WWW_GID=$(stat -c "%g" ${DEFAULT_VH_ROOT})
 	if [ ${WWW_UID} -eq 0 ] || [ ${WWW_GID} -eq 0 ]; then
 		echo "Found ${WWW_UID}:${WWW_GID} has root, will auto fix to 1000"
 		WWW_UID=1000
@@ -107,6 +107,7 @@ app_wordpress_dl(){
 }
 
 main(){
+	set_vh_docroot ${DOMAIN}
 	get_owner
 	cd ${VH_DOC_ROOT}
 	if [ "${APP_NAME}" = 'wordpress' ] || [ "${APP_NAME}" = 'wp' ]; then
@@ -132,7 +133,6 @@ while [ ! -z "${1}" ]; do
 		-d | -D | -domain) shift
 			check_input "${1}"
 			DOMAIN="${1}"
-			set_vh_docroot ${DOMAIN}
 			;;
 		-vhname) shift
 			VHNAME="${1}"
