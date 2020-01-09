@@ -3,7 +3,7 @@ configFile                $SERVER_ROOT/conf/vhosts/$VH_NAME/vhconf.conf
 allowSymbolLink           1
 enableScript              1
 restrained                1
-setUIDMode                0
+setUIDMode                2
 
 virtualHostConfig  {
   docRoot                 $VH_ROOT/html/
