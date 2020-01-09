@@ -225,19 +225,19 @@ listener HTTP {
   secure                  0
 }
 
+listener HTTPS {
+  address                 *:443
+  secure                  1
+  keyFile                 /usr/local/lsws/admin/conf/webadmin.key
+  certFile                /usr/local/lsws/admin/conf/webadmin.crt
+}
+
 vhTemplate centralConfigLog {
   templateFile            conf/templates/ccl.conf
-  listeners               Default, HTTP
-  note                    test test
-
-  member example2.com {
-    vhDomain              example2.com
+  listeners               Default, HTTP, HTTPS
+  member larshagen.net {
+    vhDomain              larshagen.net
   }
-
-  member example6.com {
-    vhDomain              example6.com
-  }
-
   member localhost {
     vhDomain              localhost
   }
