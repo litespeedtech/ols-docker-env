@@ -1,8 +1,7 @@
 # OpenLiteSpeed WordPress Docker Container (beta)
 [![Build Status](https://travis-ci.com/litespeedtech/ols-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/openlitespeed)
 [![OpenLiteSpeed](https://img.shields.io/badge/openlitespeed-1.6.4-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
-[![docker pulls](https://img.shields.io/docker/pulls/litespeed/openlitespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
-[![docker-beta pulls](https://img.shields.io/docker/pulls/litespeed/openlitespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed-beta)
+[![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed-beta?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed-beta)
 
 Lightweight WordPress container with OpenLiteSpeed 1.6.4 & PHP 7.3 based on Ubuntu 18.04 Linux.
 
@@ -30,8 +29,8 @@ The docker image installs several packages and performs other actions on your sy
 | :-------------: | :-------------: |
 |Linux|Ubuntu 18.04|
 |OpenLiteSpeed|[Latest version](https://openlitespeed.org/downloads/)|
-|MariaDB|[10.3](https://hub.docker.com/_/mariadb)|
-|PHP|[7.3](http://rpms.litespeedtech.com/debian/)|
+|MariaDB|[Stable version: 10.3](https://hub.docker.com/_/mariadb)|
+|PHP|[Stable version: 7.3](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |Certbot|[Latest from Certbot's PPA](https://launchpad.net/~certbot/+archive/ubuntu/certbot)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
@@ -77,11 +76,11 @@ Strongly recommended to set personal passwprd at first time
 bash bin/webadmin.sh my_password
 ```
 ### Start demo site
-After running follow command, you should be able to access the WordPress installation with the configured domain in the browser address. By default it is http://127.0.0.1.
+After running follow command, you should be able to access the WordPress installation with the configured domain in the browser address. By default it is http://localhost.
 ```
 bash bin/demosite.sh
 ```
-### Create Domain with Virtual Host
+### Create Domain and Virtual Host
 ```
 bash bin/domain.sh -add example.com
 ```
@@ -100,7 +99,7 @@ If you ran the database.sh script first for the same domain, it will pre-config 
 ./bin/appinstall.sh -app wordpress -domain example.com
 ```
 ### Apply Let's Encrypt Certificate
-Just enter the root domain and it will auto check and auto apply with/with out www certificate for us.
+Entering the root domain and it will auto check and auto apply with/with out www certificate for us.
 ```
 ./bin/cert.sh example.com
 ```
