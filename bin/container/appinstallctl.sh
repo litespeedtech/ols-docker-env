@@ -7,7 +7,7 @@ DOMAIN=''
 WWW_UID=''
 WWW_GID=''
 WP_CONST_CONF=''
-PUB_IP=$(curl http://checkip.amazonaws.com)
+PUB_IP=$(curl -s http://checkip.amazonaws.com)
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
 
@@ -33,18 +33,14 @@ linechange(){
 }
 
 ck_ed(){
-    if [ -f /bin/ed ]; then
-        echo "ed exist"
-    else
+    if [ ! -f /bin/ed ]; then
         echo "no ed, ready to install"
         apt-get install ed -y > /dev/null 2>&1
     fi    
 }
 
 ck_unzip(){
-    if [ -f /usr/bin/unzip ]; then 
-	    echo "unzip exist"
-    else
+    if [ ! -f /usr/bin/unzip ]; then 
         echo "no unzip, ready to install"
         apt-get install unzip -y > /dev/null 2>&1
     fi		
@@ -239,16 +235,20 @@ app_wordpress_dl(){
 		wp core download \
 			--allow-root \
 			--quiet
-		if [ "${VHNAME}" != '' ]; then
-		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${VHNAME} 
-		else
-		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
-		fi
 	else
 	    echo 'wp-config*.php already exist, abort!'
 		exit 1
 	fi
 }
+
+change_owner(){
+		if [ "${VHNAME}" != '' ]; then
+		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${VHNAME} 
+		else
+		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
+		fi
+}
+
 
 main(){
 	set_vh_docroot ${DOMAIN}
@@ -261,6 +261,7 @@ main(){
 		install_wp_plugin
 		set_htaccess
 		set_lscache
+		change_owner
 		exit 0
 	else
 		echo "APP: ${APP_NAME} not support, exit!"
@@ -268,6 +269,7 @@ main(){
 	fi
 }
 
+check_input ${1}
 while [ ! -z "${1}" ]; do
 	case ${1} in
 		-[hH] | -help | --help)

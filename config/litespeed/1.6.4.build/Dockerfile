@@ -16,7 +16,3 @@ RUN apt-get install -y software-properties-common && \
     apt-get install -y certbot python-certbot-apache
 
 
-
-#RUN echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php ${WEB_ADMIN_PASSWORD})" \
-#    > /usr/local/lsws/admin/conf/htpasswd
-
