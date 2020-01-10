@@ -8,6 +8,7 @@ WWW_UID=''
 WWW_GID=''
 WP_CONST_CONF=''
 PUB_IP=$(curl -s http://checkip.amazonaws.com)
+DB_HOST='mysql'
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
 
@@ -34,14 +35,14 @@ linechange(){
 
 ck_ed(){
     if [ ! -f /bin/ed ]; then
-        echo "no ed, ready to install"
+        echo "Install ed .."
         apt-get install ed -y > /dev/null 2>&1
     fi    
 }
 
 ck_unzip(){
     if [ ! -f /usr/bin/unzip ]; then 
-        echo "no unzip, ready to install"
+        echo "Install unzip .."
         apt-get install unzip -y > /dev/null 2>&1
     fi		
 }
@@ -62,7 +63,7 @@ get_db_pass(){
 		SQL_USER=$(grep -i Username ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
 		SQL_PASS=$(grep -i Password ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
 	else
-		echo 'DB_PASS can not locate!'
+		echo 'db pass file can not locate, skip wp-config pre-config.'
 	fi
 }
 
@@ -100,7 +101,7 @@ check_sql_native(){
 install_wp_plugin(){
     for PLUGIN in ${PLUGINLIST}; do
         wget -q -P ${VH_DOC_ROOT}/wp-content/plugins/ https://downloads.wordpress.org/plugin/${PLUGIN}
-        if [ $? = 0 ]; then
+        if [ ${?} = 0 ]; then
 		    ck_unzip
             unzip -qq -o ${VH_DOC_ROOT}/wp-content/plugins/${PLUGIN} -d ${VH_DOC_ROOT}/wp-content/plugins/
         else
@@ -219,7 +220,8 @@ preinstall_wordpress(){
 		linechange 'DB_USER' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 		NEWDBPWD="define('DB_NAME', '${SQL_DB}');"
 		linechange 'DB_NAME' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
-        NEWDBPWD="define('DB_HOST', '${PUB_IP}');"
+        #NEWDBPWD="define('DB_HOST', '${PUB_IP}');"
+		NEWDBPWD="define('DB_HOST', '${DB_HOST}');"
 		linechange 'DB_HOST' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 	elif [ -f ${VH_DOC_ROOT}/wp-config.php ]; then
 		echo "${VH_DOC_ROOT}/wp-config.php already exist, exit !"
@@ -248,7 +250,6 @@ change_owner(){
 		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
 		fi
 }
-
 
 main(){
 	set_vh_docroot ${DOMAIN}
