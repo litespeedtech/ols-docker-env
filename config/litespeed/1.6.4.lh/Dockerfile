@@ -28,5 +28,4 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 WORKDIR /var/www/vhosts/
-CMD ["/usr/local/lsws/bin/openlitespeed","-n"]
-
+CMD ["/usr/local/lsws/bin/lswsctrl","start"]
