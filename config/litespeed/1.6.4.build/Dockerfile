@@ -1,5 +1,5 @@
 #FROM debian:jessie-slim
-FROM litespeedtech/openlitespeed-beta:latest
+FROM litespeedtech/openlitespeed-beta:1.6.4.lh
 
 ARG extensions
 
