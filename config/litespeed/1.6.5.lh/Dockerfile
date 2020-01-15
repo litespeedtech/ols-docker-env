@@ -21,6 +21,8 @@ RUN apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get install -y certbot python-certbot-apache
 
+RUN sed 's/0.*.certbot/&  --deploy-hook "\/usr\/local\/lsws\/bin\/lswsctrl restart"/g' /etc/cron.d/certbot
+
 RUN rm -rf /usr/local/lsws/conf
 ADD conf /usr/local/lsws/conf
 RUN chown 999:999 /usr/local/lsws/conf -R

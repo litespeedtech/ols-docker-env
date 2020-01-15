@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 DOMAIN=''
 TYPE=0
+CONT_NAME='litespeed'
 
 help_message(){
     echo 'Command [your_domain]'
@@ -54,10 +55,15 @@ lecertapply(){
     fi          
 }    
 
+certbothook(){
+    docker-compose exec ${CONT_NAME} su -s /bin/bash -c "certhookctl.sh"
+}    
+
 main(){
     www_domain ${1}
     domain_verify
     lecertapply ${DOMAIN}
+    certbothook
     bash bin/webadmin.sh -r
 }    
 

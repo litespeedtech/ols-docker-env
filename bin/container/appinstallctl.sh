@@ -71,7 +71,7 @@ set_vh_docroot(){
 	if [ "${VHNAME}" != '' ]; then
 	    VH_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}"
 	    VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}/html"
-		WP_CONS_TCONF="${VH_DOC_ROOT}/wp-content/plugins/litespeed-cache/data/const.default.ini"
+		WP_CONST_CONF="${VH_DOC_ROOT}/wp-content/plugins/litespeed-cache/data/const.default.ini"
 	elif [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
 	    VH_ROOT="${DEFAULT_VH_ROOT}/${1}"
         VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${1}/html"
