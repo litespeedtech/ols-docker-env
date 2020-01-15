@@ -58,6 +58,7 @@ main(){
     www_domain ${1}
     domain_verify
     lecertapply ${DOMAIN}
+    bash bin/webadmin.sh -r
 }    
 
 check_input ${1}
