@@ -22,7 +22,7 @@ set_web_admin(){
 }
 
 lsws_restart(){
-    docker-compose exec litespeed su -c '/usr/local/lsws/bin/lswsctrl restart'
+    docker-compose exec litespeed su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 }
 
 main(){
