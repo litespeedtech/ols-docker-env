@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+CONT_NAME='litespeed'
 
 help_message(){
     echo 'Command [PASSWORD]'
@@ -6,6 +7,8 @@ help_message(){
     echo 'Command [-r]'
     echo 'Example: webadmin.sh -r' 
     echo 'Will restart LiteSpeed Web Server'
+    echo 'Command [-modsec] [enable|disable]'
+    echo 'Example: webadmin -modsec enable'
     exit 0
 }
 
@@ -16,13 +19,25 @@ check_input(){
     fi
 }
 
-set_web_admin(){
-    docker-compose exec litespeed su -s /bin/bash lsadm -c \
-        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
+lsws_restart(){
+    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 }
 
-lsws_restart(){
-    docker-compose exec litespeed su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+mod_secure(){
+    if [ "${1}" = 'enable' ] || [ "${1}" = 'Enable' ]; then
+        docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "owaspctl.sh -enable"
+        lsws_restart
+    elif [ "${1}" = 'disable' ] || [ "${1}" = 'Disable' ]; then
+        docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "owaspctl.sh -disable"
+        lsws_restart
+    else
+        help_message
+    fi
+}
+
+set_web_admin(){
+    docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
+        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
 }
 
 main(){
@@ -37,7 +52,10 @@ while [ ! -z "${1}" ]; do
             ;;
         -[rR] | -restart | --restart)
             lsws_restart
-            ;;         
+            ;;
+        -modsec | -sec| --sec) shift
+            mod_secure ${1}
+            ;;
         *) 
             main ${1}
             ;;              

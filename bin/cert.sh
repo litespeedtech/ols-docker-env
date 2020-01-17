@@ -44,10 +44,10 @@ domain_verify(){
 
 lecertapply(){
     if [ ${TYPE} = 1 ]; then
-        docker-compose exec litespeed su -c "certbot certonly --agree-tos --register-unsafely-without-email \
+        docker-compose exec ${CONT_NAME} su -c "certbot certonly --agree-tos --register-unsafely-without-email \
             --non-interactive --webroot -w /var/www/vhosts/${1}/html -d ${1}"
     elif [ ${TYPE} = 2 ]; then
-        docker-compose exec litespeed su -c "certbot certonly --agree-tos --register-unsafely-without-email \
+        docker-compose exec ${CONT_NAME} su -c "certbot certonly --agree-tos --register-unsafely-without-email \
             --non-interactive --webroot -w /var/www/vhosts/${1}/html -d ${1} -d www.${1}"
     else
         echo 'unknown Type!'

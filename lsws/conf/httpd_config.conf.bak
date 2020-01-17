@@ -235,9 +235,6 @@ listener HTTPS {
 vhTemplate centralConfigLog {
   templateFile            conf/templates/ccl.conf
   listeners               Default, HTTP, HTTPS
-  member larshagen.net {
-    vhDomain              larshagen.net
-  }
   member localhost {
     vhDomain              localhost
   }

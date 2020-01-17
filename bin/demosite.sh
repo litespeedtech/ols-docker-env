@@ -2,6 +2,7 @@
 source .env
 DEMO_VH='localhost'
 APP_NAME='wordpress'
+CONT_NAME='litespeed'
 DEMO_PATH="/var/www/${DEMO_VH}"
 
 help_message(){
@@ -31,7 +32,7 @@ EOT
 }
 
 app_download(){
-    docker-compose exec litespeed su -c "appinstallctl.sh -app ${1} -domain ${2} -vhname ${DEMO_VH}"
+    docker-compose exec ${CONT_NAME} su -c "appinstallctl.sh -app ${1} -domain ${2} -vhname ${DEMO_VH}"
 }
 
 main(){
