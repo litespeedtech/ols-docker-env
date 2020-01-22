@@ -1,4 +1,4 @@
-# OpenLiteSpeed WordPress Docker Container
+# OpenLiteSpeed WordPress Docker Container (Beta)
 [![Build Status](https://travis-ci.com/litespeedtech/ols-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/openlitespeed)
 [![OpenLiteSpeed](https://img.shields.io/badge/openlitespeed-1.6.5-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
 [![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed-beta?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed-beta)
