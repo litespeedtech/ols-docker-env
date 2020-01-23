@@ -1,7 +1,8 @@
 # OpenLiteSpeed WordPress Docker Container (Beta)
 [![Build Status](https://travis-ci.com/litespeedtech/ols-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/openlitespeed)
 [![OpenLiteSpeed](https://img.shields.io/badge/openlitespeed-1.6.5-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
-[![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed-beta?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed-beta)
+[![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
+[![beta pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed-beta?label=beta%20pulls)](https://hub.docker.com/r/litespeedtech/openlitespeed-beta)
 
 Install a Lightweight WordPress container with OpenLiteSpeed 1.6.5+ & PHP 7.3+ based on Ubuntu 18.04 Linux.
 
@@ -108,6 +109,11 @@ To preconfigure the `wp-config` file, run the `database.sh` script for your doma
 Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
 ```
 ./bin/cert.sh example.com
+```
+### Update Web Server
+To upgrade web server to latest stable version, run
+```
+bash bin/webadmin.sh -lsup
 ```
 
 ### Accessing the Database

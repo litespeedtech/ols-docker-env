@@ -9,6 +9,9 @@ help_message(){
     echo 'Will restart LiteSpeed Web Server'
     echo 'Command [-modsec] [enable|disable]'
     echo 'Example: webadmin -modsec enable'
+    echo 'Command [-lsup]'
+    echo 'Example: webadmin.sh -lsup'
+    echo 'Will upgrade to latest stable version' 
     exit 0
 }
 
@@ -35,6 +38,10 @@ mod_secure(){
     fi
 }
 
+ls_upgrade(){
+    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/admin/misc/lsup.sh 2>/dev/null'
+}
+
 set_web_admin(){
     docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
         'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
@@ -56,6 +63,9 @@ while [ ! -z "${1}" ]; do
         -modsec | -sec| --sec) shift
             mod_secure ${1}
             ;;
+        -lsup | -upgrade) shift
+            ls_upgrade
+            ;;            
         *) 
             main ${1}
             ;;              
