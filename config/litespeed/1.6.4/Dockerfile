@@ -1,7 +1,7 @@
 #FROM debian:jessie-slim
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get install wget curl -y
+RUN apt-get update && apt-get install wget curl tzdata -y
 
 RUN wget https://openlitespeed.org/preuse/openlitespeed-1.6.4.tgz && \
     tar xzvf openlitespeed-1.6.4.tgz && cd openlitespeed && ./install.sh && rm -rf /openlitespeed

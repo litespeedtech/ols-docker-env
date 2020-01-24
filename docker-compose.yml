@@ -32,6 +32,8 @@ services:
       - 443:443
       - 7080:7080
     restart: always
+    environment:
+      TZ: ${TimeZone}
   adminer:
     image: dockette/adminer:full
     ports:
