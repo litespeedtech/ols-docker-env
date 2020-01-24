@@ -28,10 +28,10 @@ lsws_restart(){
 
 mod_secure(){
     if [ "${1}" = 'enable' ] || [ "${1}" = 'Enable' ]; then
-        docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "owaspctl.sh -enable"
+        docker-compose exec ${CONT_NAME} su -s /bin/bash root -c "owaspctl.sh -enable"
         lsws_restart
     elif [ "${1}" = 'disable' ] || [ "${1}" = 'Disable' ]; then
-        docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "owaspctl.sh -disable"
+        docker-compose exec ${CONT_NAME} su -s /bin/bash root -c "owaspctl.sh -disable"
         lsws_restart
     else
         help_message
@@ -44,7 +44,7 @@ ls_upgrade(){
 
 set_web_admin(){
     docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
-        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
+        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
 }
 
 main(){
