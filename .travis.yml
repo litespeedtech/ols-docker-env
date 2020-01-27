@@ -27,6 +27,8 @@ before_install:
 
 install:
   - git clone https://github.com/litespeedtech/ols-docker-env.git
+  - docker build --tag litespeedtech/openlitespeed-beta:1.6.5.lh config/litespeed/1.6.5.lh
+  - docker build --tag litespeedtech/openlitespeed-beta:1.6.4.lh config/litespeed/1.6.4.lh
   - docker-compose build --no-cache
   - docker-compose up -d
 
@@ -40,7 +42,8 @@ script:
 
 after_success:
   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-  - docker-compose push litespeed
+  - docker push litespeedtech/openlitespeed-beta:1.6.5.lh
+  - docker push litespeedtech/openlitespeed-beta:1.6.4.lh
 
 after_script:
   - docker-compose stop
