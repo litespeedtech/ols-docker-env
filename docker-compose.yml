@@ -16,7 +16,7 @@ services:
     build:                                                                                                             
       context: ./config/litespeed/${LITESPEED}/                                                                        
       args:
-              #extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
+        #extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
         extensions:                                                                             
     image: litespeedtech/openlitespeed-beta:travis
     env_file:
@@ -36,9 +36,10 @@ services:
     restart: always
     environment:
       TZ: ${TimeZone}
-  adminer:
-    image: dockette/adminer:full
+  phpmyadmin:
+    image: bitnami/phpmyadmin:latest
     ports:
       - 8080:80
+      - 8443:443
     environment:
-      - MEMORY=-1
+        DATABASE_HOST: mysql
