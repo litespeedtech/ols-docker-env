@@ -17,8 +17,8 @@ services:
       context: ./config/litespeed/${LITESPEED}/                                                                        
       args:
         #extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
-        extensions:                                                                             
-    image: litespeedtech/openlitespeed-beta:travis
+        extensions: vim
+    image: litespeedtech/openlitespeed-beta:${LITESPEED}
     env_file:
       - .env
     volumes:
