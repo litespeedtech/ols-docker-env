@@ -29,12 +29,11 @@ install:
   - git clone https://github.com/litespeedtech/ols-docker-env.git
   - docker build --tag litespeedtech/openlitespeed-beta:1.6.5.lh config/litespeed/1.6.5.lh
   - docker build --tag litespeedtech/openlitespeed-beta:1.6.4.lh config/litespeed/1.6.4.lh
-  - docker-compose build --no-cache
   - docker-compose up -d
 
 before_script:
   - docker image ls
-  - sleep 20
+  - sleep 10
 
 script:  
   - curl -Ik http://localhost:80/
