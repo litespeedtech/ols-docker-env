@@ -22,7 +22,6 @@ env:
   - DOCKER_COMPOSE_VERSION=1.25.0
 
 before_install:
-  - chmod +x ./.travis/main.sh
   - ./.travis/main.sh
 
 install:
@@ -36,8 +35,7 @@ before_script:
   - sleep 10
 
 script:  
-  - curl -Ik http://localhost:80/
-  - curl -Ik http://localhost:443/
+  - ./.travis/verify.sh
 
 after_success:
   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin

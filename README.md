@@ -35,6 +35,7 @@ The docker image installs the following packages on your system:
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |Certbot|[Latest from Certbot's PPA](https://launchpad.net/~certbot/+archive/ubuntu/certbot)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
+|phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/bitnami/phpmyadmin/)|
 
 ## Data Structure
 There is a `sites` directory next to your `docker-compose.yml` file, and it contains the following:
@@ -117,7 +118,7 @@ bash bin/webadmin.sh -lsup
 ```
 
 ### Accessing the Database
-After installation, you can use Adminer (formerly phpMinAdmin) to access the database by visiting http://127.0.0.1:8080. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
+After installation, you can use phpMinAdmin to access the database by visiting http://127.0.0.1:8080 or https://127.0.0.1:8443. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
 ## Support & Feedback
 If you still have a question after using OpenLiteSpeed Docker, you have a few options.
