@@ -146,6 +146,12 @@
       <handler>lsphp7</handler>
     </scriptHandler>
   </scriptHandlerList>
+  <cache>
+    <cacheEngine>7</cacheEngine>
+    <storage>
+      <cacheStorePath>/var/www/lscache/</cacheStorePath>
+    </storage>
+  </cache>
   <phpConfig>
     <maxConns>35</maxConns>
     <env>PHP_LSAPI_CHILDREN=35</env>

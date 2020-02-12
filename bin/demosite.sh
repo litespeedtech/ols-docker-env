@@ -35,9 +35,14 @@ app_download(){
     docker-compose exec ${CONT_NAME} su -c "appinstallctl.sh -app ${1} -domain ${2} -vhname ${DEMO_VH}"
 }
 
+lsws_restart(){
+    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+}
+
 main(){
     store_credential ${DEMO_VH}
     app_download ${APP_NAME} ${DOMAIN}
+    lsws_restart
 }
 
 while [ ! -z "${1}" ]; do
