@@ -39,12 +39,14 @@ mod_secure(){
 }
 
 ls_upgrade(){
+    echo 'Upgrade web server to latest stable version.'
     docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/admin/misc/lsup.sh 2>/dev/null'
 }
 
 set_web_admin(){
+    echo 'Update web admin password.'
     docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
-        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
+        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
 }
 
 main(){

@@ -2,13 +2,25 @@
 LSDIR='/usr/local/lsws'
 OWASP_DIR="${LSDIR}/conf/owasp"
 RULE_FILE='modsec_includes.conf'
-HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
+LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
+OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
 
 help_message(){
     echo 'Command [-enable|-disable]'
     echo 'Example: owaspctl.sh -enable'
     echo 'Enable mod_secure module with latest OWASP version of rules'
     exit 0
+}
+
+check_lsv(){
+    if [ -f ${LSDIR}/bin/openlitespeed ]; then
+        LSV='openlitespeed'
+    elif [ -f ${LSDIR}/bin/litespeed ]; then
+        LSV='lsws'
+    else
+        echo 'Version not exist, abort!'
+        exit 1     
+    fi
 }
 
 check_input(){
@@ -36,12 +48,12 @@ fst_match_after(){
     FIRST_NUM_AFTER=$(tail -n +${1} ${2} | grep -n -m 1 ${3} | awk -F ':' '{print $1}')
 }
 lst_match_line(){
-    fst_match_after ${1} ${2} '}'
+    fst_match_after ${1} ${2} ${3}
     LAST_LINE_NUM=$((${FIRST_LINE_NUM}+${FIRST_NUM_AFTER}-1))
 }
 
-enable_modsec(){
-    grep 'module mod_security {' ${HTTPD_CONF} >/dev/null 2>&1
+enable_ols_modsec(){
+    grep 'module mod_security {' ${OLS_HTTPD_CONF} >/dev/null 2>&1
     if [ ${?} -eq 0 ] ; then
         echo "Already configured for modsecurity."
     else
@@ -49,20 +61,68 @@ enable_modsec(){
         sed -i "s=module cache=module mod_security {\nmodsecurity  on\
         \nmodsecurity_rules \`\nSecRuleEngine On\n\`\nmodsecurity_rules_file \
         ${OWASP_DIR}/${RULE_FILE}\n  ls_enabled              1\n}\
-        \n\nmodule cache=" ${HTTPD_CONF}
+        \n\nmodule cache=" ${OLS_HTTPD_CONF}
     fi    
 }
 
-disable_modesec(){
-    grep 'module mod_security {' ${HTTPD_CONF} >/dev/null 2>&1
+enable_ls_modsec(){
+    grep '<enableCensorship>1</enableCensorship>' ${LS_HTTPD_CONF} >/dev/null 2>&1
+    if [ ${?} -eq 0 ] ; then
+        echo "LSWS already configured for modsecurity"
+    else
+        echo 'Enable modsecurity'
+        sed -i \
+        "s=<enableCensorship>0</enableCensorship>=<enableCensorship>1</enableCensorship>=" ${LS_HTTPD_CONF}
+        sed -i \
+        "s=</censorshipControl>=</censorshipControl>\n\
+        <censorshipRuleSet>\n\
+        <name>ModSec</name>\n\
+        <enabled>1</enabled>\n\
+        <ruleSet>include ${OWASP_DIR}/modsec_includes.conf</ruleSet>\n\
+        </censorshipRuleSet>=" ${LS_HTTPD_CONF}
+    fi
+}
+
+enable_modsec(){
+    if [ "${LSV}" = 'lsws' ]; then
+        enable_ls_modsec
+    elif [ "${LSV}" = 'openlitespeed' ]; then
+        enable_ols_modsec
+    fi
+}
+
+disable_ols_modesec(){
+    grep 'module mod_security {' ${OLS_HTTPD_CONF} >/dev/null 2>&1
     if [ ${?} -eq 0 ] ; then
         echo 'Disable modsecurity'
-        fst_match_line 'module mod_security' ${HTTPD_CONF}
-        lst_match_line ${FIRST_LINE_NUM} ${HTTPD_CONF}
-        sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${HTTPD_CONF}
+        fst_match_line 'module mod_security' ${OLS_HTTPD_CONF}
+        lst_match_line ${FIRST_LINE_NUM} ${OLS_HTTPD_CONF} '}'
+        sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${OLS_HTTPD_CONF}
     else
         echo 'Already disabled for modsecurity'
     fi    
+}
+
+disable_ls_modesec(){
+    grep '<enableCensorship>0</enableCensorship>' ${LS_HTTPD_CONF}
+    if [ ${?} -eq 0 ] ; then
+        echo 'Already disabled for modsecurity'
+    else
+        echo 'Disable modsecurity'
+        sed -i \
+        "s=<enableCensorship>1</enableCensorship>=<enableCensorship>0</enableCensorship>=" ${LS_HTTPD_CONF}
+        fst_match_line 'censorshipRuleSet' ${LS_HTTPD_CONF}
+        lst_match_line ${FIRST_LINE_NUM} ${LS_HTTPD_CONF} '/censorshipRuleSet'
+        sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${LS_HTTPD_CONF}
+    fi    
+}
+
+disable_modsec(){
+    if [ "${LSV}" = 'lsws' ]; then
+        disable_ls_modesec
+    elif [ "${LSV}" = 'openlitespeed' ]; then
+        disable_ols_modesec
+    fi
 }
 
 install_git(){
@@ -145,10 +205,12 @@ while [ ! -z "${1}" ]; do
             ;;
         -enable | -e | -E)
             main_owasp
+            check_lsv
             enable_modsec
             ;;
         -disable | -d | -D)
-            disable_modesec
+            check_lsv
+            disable_modsec
             ;;          
         *) 
             help_message
