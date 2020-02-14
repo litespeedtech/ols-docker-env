@@ -52,9 +52,9 @@ email_filter(){
         fi
         CKREG="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?\$"
         if [[ ${1} =~ ${CKREG} ]] ; then
-            echo -e "[O] The E-mail you entered \033[32m${EMAIL}\033[0m is valid."
+            echo -e "[O] The E-mail \033[32m${EMAIL}\033[0m is valid."
         else
-            echo -e "[X] The E-mail you entered \e[31m${EMAIL}\e[39m is invalid"
+            echo -e "[X] The E-mail \e[31m${EMAIL}\e[39m is invalid"
             exit 1
         fi
     fi    
@@ -73,17 +73,17 @@ www_domain(){
 domain_verify(){
     curl -Is http://${DOMAIN}/ | grep -i LiteSpeed > /dev/null 2>&1
     if [ ${?} = 0 ]; then
-        echo -e "[O] The domain you entered \033[32m${DOMAIN}\033[0m is accessible."
+        echo -e "[O] The domain name \033[32m${DOMAIN}\033[0m is accessible."
         TYPE=1
         curl -Is http://${WWW_DOMAIN}/ | grep -i LiteSpeed > /dev/null 2>&1
         if [ ${?} = 0 ]; then
-            echo -e "[O] The domain you entered \033[32m${WWW_DOMAIN}\033[0m is accessible."
+            echo -e "[O] The domain name \033[32m${WWW_DOMAIN}\033[0m is accessible."
             TYPE=2
         else
-            echo -e "[!] The domain you entered ${WWW_DOMAIN} is inaccessible." 
+            echo -e "[!] The domain name ${WWW_DOMAIN} is inaccessible." 
         fi
     else
-        echo -e "[X] The domain you entered \e[31m${DOMAIN}\e[39m is inaccessible, please verify."
+        echo -e "[X] The domain name \e[31m${DOMAIN}\e[39m is inaccessible, please verify."
         exit 1    
     fi
 }
@@ -96,9 +96,9 @@ doc_root_verify(){
     fi
     docker-compose exec ${CONT_NAME} su -c "[ -e ${DOC_PATH} ]"
     if [ ${?} -eq 0 ]; then
-        echo -e "[O] The document root folder \033[32m${DOC_PATH}\033[0m is exit."
+        echo -e "[O] The document root folder \033[32m${DOC_PATH}\033[0m does exist."
     else
-        echo -e "[X] The document root folder you entered \e[31m${DOC_PATH}\e[39m is not exist!"
+        echo -e "[X] The document root folder \e[31m${DOC_PATH}\e[39m does not exist!"
         exit 1
     fi
 }

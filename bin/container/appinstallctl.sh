@@ -35,14 +35,14 @@ linechange(){
 
 ck_ed(){
     if [ ! -f /bin/ed ]; then
-        echo "Install ed .."
+        echo "Install ed package.."
         apt-get install ed -y > /dev/null 2>&1
     fi    
 }
 
 ck_unzip(){
     if [ ! -f /usr/bin/unzip ]; then 
-        echo "Install unzip .."
+        echo "Install unzip package.."
         apt-get install unzip -y > /dev/null 2>&1
     fi		
 }
@@ -51,9 +51,9 @@ get_owner(){
 	WWW_UID=$(stat -c "%u" ${DEFAULT_VH_ROOT})
 	WWW_GID=$(stat -c "%g" ${DEFAULT_VH_ROOT})
 	if [ ${WWW_UID} -eq 0 ] || [ ${WWW_GID} -eq 0 ]; then
-		echo "Found ${WWW_UID}:${WWW_GID} has root, will auto fix to 1000"
 		WWW_UID=1000
 		WWW_GID=1000
+		echo "Set owner to ${WWW_UID}"
 	fi
 }
 
@@ -238,7 +238,7 @@ app_wordpress_dl(){
 			--allow-root \
 			--quiet
 	else
-	    echo 'wp-config*.php already exist, abort!'
+	    echo 'wordpress already exist, abort!'
 		exit 1
 	fi
 }
