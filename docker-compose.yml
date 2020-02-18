@@ -13,11 +13,6 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   litespeed:
-    #build:                                                                                                             
-    #  context: ./config/litespeed/${LITESPEED}/                                                                        
-    #  args:
-        #extensions: lsphp72 lsphp72-common lsphp72-mysql lsphp72-json                                                                                    
-    #    extensions: vim
     image: litespeedtech/openlitespeed-beta:${OLS_VERSION}-${PHP_VERSION}
     env_file:
       - .env
