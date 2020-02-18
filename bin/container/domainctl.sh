@@ -67,7 +67,7 @@ add_ls_domain(){
 }
 
 add_ols_domain(){
-    perl -0777 -p -i -e 's/(vhTemplate centralConfigLog \{[^}]+)\}*(^.*listeners.*$)/\1$2
+    perl -0777 -p -i -e 's/(vhTemplate docker \{[^}]+)\}*(^.*listeners.*$)/\1$2
   member '${DOMAIN}' {
     vhDomain              '${DOMAIN},${WWW_DOMAIN}'
   }/gmi' ${OLS_HTTPD_CONF}
