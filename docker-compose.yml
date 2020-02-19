@@ -21,7 +21,7 @@ services:
         - ./lsws/admin-conf:/usr/local/lsws/admin/conf
         - ./bin/container:/usr/local/bin
         - ./sites:/var/www/vhosts/
-        - ./certs:/etc/letsencrypt/
+        - ./certs:/root/.acme.sh/
         - ./logs:/usr/local/lsws/logs/
     ports:
       - 80:80
