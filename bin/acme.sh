@@ -53,6 +53,7 @@ install_acme(){
 
 install_cert(){
     docker-compose exec litespeed su -c "/root/.acme.sh/acme.sh --issue -d ${DOMAIN} -w /var/www/vhosts/${DOMAIN}/html/"
+    bin/webadmin.sh -r
 
 }
 
@@ -79,7 +80,6 @@ while [ ! -z "${1}" ]; do
             DOMAIN="${1}"
             ;;
         --install ) 
-            #check_input "${1}"
             INSTALL=true
             ;;
         --email ) shift
