@@ -1,12 +1,18 @@
 #!/bin/bash
-BOTCRON='/etc/cron.d/certbot'
+BOTCRON='/var/spool/cron/crontabs/root'
 
-certbothook(){
-    grep 'lswsctrl restart' ${BOTCRON} >/dev/null
-    if [ ${?} = 1 ]; then
-        echo 'Add LSWS hook to certbot cronjob.'
-        sed -i 's/0.*renew/&  --deploy-hook "\/usr\/local\/lsws\/bin\/lswsctrl restart"/g' ${BOTCRON}
-    fi    
+cert_hook(){
+    grep 'acme' ${BOTCRON} >/dev/null
+    if [ ${?} = 0 ]; then
+        grep 'lswsctrl' ${BOTCRON} >/dev/null
+        if [ ${?} = 0 ]; then
+            echo 'Hook already exist, skip!'
+        else
+            sed -i 's/--cron/--cron --renew-hook "\/usr\/local\/lsws\/bin\/lswsctrl restart"/g' ${BOTCRON}
+        fi    
+    else
+        echo "[X] ${BOTCRON} does not exist, please check it later!"
+    fi
 }
 
-certbothook
+cert_hook
