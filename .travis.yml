@@ -26,8 +26,6 @@ before_install:
 
 install:
   - git clone https://github.com/litespeedtech/ols-docker-env.git
-  - docker build --tag litespeedtech/openlitespeed-beta:1.6.5.lh config/litespeed/1.6.5.lh
-  - docker build --tag litespeedtech/openlitespeed-beta:1.6.4.lh config/litespeed/1.6.4.lh
   - docker-compose up -d
 
 before_script:
@@ -36,11 +34,6 @@ before_script:
 
 script:  
   - ./.travis/verify.sh
-
-after_success:
-  - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-  - docker push litespeedtech/openlitespeed-beta:1.6.5.lh
-  - docker push litespeedtech/openlitespeed-beta:1.6.4.lh
 
 after_script:
   - docker-compose stop
