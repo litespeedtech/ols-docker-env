@@ -5,7 +5,7 @@
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a Lightweight WordPress container with OpenLiteSpeed [Edge / Stable] version based on Ubuntu 18.04 Linux.
+Install a lightweight WordPress container with OpenLiteSpeed Edge or Stable version on Ubuntu 18.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
@@ -13,6 +13,7 @@ Install a Lightweight WordPress container with OpenLiteSpeed [Edge / Stable] ver
 
 ## Configuration
 Edit the `.env` file to update the demo site domain, default MySQL user, and password.
+Feel free to check [Docker hub Tag page](https://hub.docker.com/repository/docker/litespeedtech/openlitespeed/tags) if you want to update default openlitespeed and php versions. 
 
 ## Installation
 Clone this repository or copy the files from this repository into a new folder:
@@ -24,7 +25,7 @@ Open a terminal, `cd` to the folder in which `docker-compose.yml` is saved, and 
 docker-compose up
 ```
 
-Note: If you wish to run a single web server container, please check [Usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
+Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
 
 ## Components
 The docker image installs the following packages on your system:
@@ -34,7 +35,7 @@ The docker image installs the following packages on your system:
 |Linux|Ubuntu 18.04|
 |OpenLiteSpeed|[Latest version](https://openlitespeed.org/downloads/)|
 |MariaDB|[Stable version: 10.3](https://hub.docker.com/_/mariadb)|
-|PHP|[Stable version: 7.4](http://rpms.litespeedtech.com/debian/)|
+|PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
@@ -56,18 +57,18 @@ Cloned project
 ├── lsws
 │   ├── admin-conf
 │   └── conf
-└── sites
+├── sites
 │   └── localhost
 ├── LICENSE
 ├── README.md
-├── docker-compose.yml
+└── docker-compose.yml
 ```
-  * **acme**  contains all applied the cert from Lets Encrypt
-  * **bin**   contains multiple cli scripts to allow you add/del VH, install applications, upgrade ..etc 
-  * **data**  Stores mysql db
-  * **logs**  contains all the webserver logs and virtual host access logs
-  * **lsws**  contains all web server config files
-  * **sites** contains the Document root (the WordPress application will install here)
+  * `acme` contains all applied certificates from Lets Encrypt
+  * `bin` contains multiple CLI scripts to allow you add or delete virtual hosts, install applications, upgrade, etc 
+  * `data` stores the MySQL database
+  * `logs` contains all of the web server logs and virtual host access logs
+  * `lsws` contains all web server configuration files
+  * `sites` contains the document roots (the WordPress application will install here)
 
 ## Usage
 ### Starting a Container
@@ -80,7 +81,6 @@ You can run with daemon mode, like so:
 docker-compose up -d
 ```
 The container is now built and running. 
-
 ### Stopping a Container
 ```
 docker-compose stop
@@ -96,7 +96,7 @@ We strongly recommend you set your personal password right away.
 bash bin/webadmin.sh MYPASSWORD
 ```
 ### Starting a Demo Site
-After running the following command, you should be able to access the WordPress installation with the configured domain. By default the domain is `https://localhost` and `https://server_IP`.
+After running the following command, you should be able to access the WordPress installation with the configured domain. By default the domain is `https://localhost` and also `https://server_IP`.
 ```
 bash bin/demosite.sh
 ```
@@ -122,40 +122,37 @@ To preconfigure the `wp-config` file, run the `database.sh` script for your doma
 ```
 ./bin/appinstall.sh [-app|-a] wordpress [-domain|-d] example.com
 ```
-
 ### Install ACME 
-We need to run amce installation command at **first time only**. 
-*  With email notification
+We need to run the ACME installation command the **first time only**. 
+With email notification:
 ```
 ./bin/acme.sh [--install|-i] [--email|-e] EMAIL_ADDR
 ```
-*  Without email notification
+Without email notification:
 ```
 ./bin/acme.sh [--install|-i] [--no-email|-ne]
 ```
-
 ### Applying a Let's Encrypt Certificate
 Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
 ```
 ./bin/acme.sh [-domain|-d] example.com
 ```
 ### Update Web Server
-To upgrade web server to latest stable version, run
+To upgrade the web server to latest stable version, run the following:
 ```
 bash bin/webadmin.sh [-lsup|-upgrade]
 ```
-
 ### Apply OWASP ModSecurity
-Enable OWASP mod_secure on web server, run 
+Enable OWASP `mod_secure` on the web server: 
 ```
 bash bin/webadmin.sh [-modsec|-sec] enable
 ```
-Disable OWASP mod_secure on web server, run 
+Disable OWASP `mod_secure` on the web server: 
 ```
 bash bin/webadmin.sh [-modsec|-sec] disable
 ```
 ### Accessing the Database
-After installation, you can use phpMinAdmin to access the database by visiting http://127.0.0.1:8080 or https://127.0.0.1:8443. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
+After installation, you can use phpMyAdmin to access the database by visiting `http://127.0.0.1:8080` or `https://127.0.0.1:8443`. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
 ## Support & Feedback
 If you still have a question after using OpenLiteSpeed Docker, you have a few options.
