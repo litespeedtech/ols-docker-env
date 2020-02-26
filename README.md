@@ -10,19 +10,21 @@ Install a Lightweight WordPress container with OpenLiteSpeed [Edge / Stable] ver
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
 2. [Install Docker Compose](https://docs.docker.com/compose/)
-3. Clone this repository or copy the files from this repository into a new folder:
-```
-git clone https://github.com/litespeedtech/ols-docker-env.git
-```
 
 ## Configuration
 Edit the `.env` file to update the demo site domain, default MySQL user, and password.
 
 ## Installation
+Clone this repository or copy the files from this repository into a new folder:
+```
+git clone https://github.com/litespeedtech/ols-docker-env.git
+```
 Open a terminal, `cd` to the folder in which `docker-compose.yml` is saved, and run:
 ```
 docker-compose up
 ```
+
+Note: If you wish to run a single web server container, please check [Usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
 
 ## Components
 The docker image installs the following packages on your system:
@@ -131,6 +133,7 @@ We need to run amce installation command at **first time only**.
 ```
 ./bin/acme.sh [--install|-i] [--no-email|-ne]
 ```
+
 ### Applying a Let's Encrypt Certificate
 Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
 ```
