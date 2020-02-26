@@ -1,6 +1,5 @@
-language: bash
-
-sudo: 'required'
+language: shell
+os: linux
 
 notifications:
   email:
@@ -22,7 +21,7 @@ env:
   - DOCKER_COMPOSE_VERSION=1.25.0
 
 before_install:
-  - ./.travis/main.sh
+  - bash .travis/main.sh
 
 install:
   - git clone https://github.com/litespeedtech/ols-docker-env.git
@@ -33,7 +32,7 @@ before_script:
   - sleep 10
 
 script:  
-  - ./.travis/verify.sh
+  - bash .travis/verify.sh
 
 after_script:
   - docker-compose stop
