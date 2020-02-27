@@ -13,7 +13,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   litespeed:
-    image: litespeedtech/openlitespeed-beta:${OLS_VERSION}-${PHP_VERSION}
+    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
     env_file:
       - .env
     volumes:
