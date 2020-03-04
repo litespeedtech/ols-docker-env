@@ -63,11 +63,17 @@ Cloned project
 ├── README.md
 └── docker-compose.yml
 ```
+
   * `acme` contains all applied certificates from Lets Encrypt
+
   * `bin` contains multiple CLI scripts to allow you add or delete virtual hosts, install applications, upgrade, etc 
+
   * `data` stores the MySQL database
+
   * `logs` contains all of the web server logs and virtual host access logs
+
   * `lsws` contains all web server configuration files
+
   * `sites` contains the document roots (the WordPress application will install here)
 
 ## Usage
@@ -93,54 +99,54 @@ docker-compose down
 ### Setting the WebAdmin Password
 We strongly recommend you set your personal password right away.
 ```
-bash bin/webadmin.sh MYPASSWORD
+bash bin/webadmin.sh my_password
 ```
 ### Starting a Demo Site
-After running the following command, you should be able to access the WordPress installation with the configured domain. By default the domain is `https://localhost` and also `https://server_IP`.
+After running the following command, you should be able to access the WordPress installation with the configured domain. By default the domain is http://localhost.
 ```
 bash bin/demosite.sh
 ```
 ### Creating a Domain and Virtual Host
 ```
-bash bin/domain.sh [-add|-a] example.com
+bash bin/domain.sh [-A, --add] example.com
 ```
 ### Deleting a Domain and Virtual Host
 ```
-bash bin/domain.sh [-del|-d] example.com
+bash bin/domain.sh [-D, --del] example.com
 ```
 ### Creating a Database
 You can either automatically generate the user, password, and database names, or specify them. Use the following to auto generate:
 ```
-bash bin/database.sh [-domain|-d] example.com
+bash bin/database.sh [-D, --domain] example.com
 ```
 Use this command to specify your own names, substituting `user_name`, `my_password`, and `database_name` with your preferred values:
 ```
-bash bin/database.sh [-domain|-d] example.com [-user|-u] user_name [-password|-p] my_password [-database|-db] database_name
+bash bin/database.sh [-D, --domain] example.com [-U, --user] USER_NAME [-P, --password] MY_PASS [-DB, --database] DATABASE_NAME
 ```
 ### Installing a WordPress Site
 To preconfigure the `wp-config` file, run the `database.sh` script for your domain, before you use the following command to install WordPress:
 ```
-./bin/appinstall.sh [-app|-a] wordpress [-domain|-d] example.com
+./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com
 ```
 ### Install ACME 
 We need to run the ACME installation command the **first time only**. 
 With email notification:
 ```
-./bin/acme.sh [--install|-i] [--email|-e] EMAIL_ADDR
+./bin/acme.sh [-I, --install] [-E, --email] EMAIL_ADDR
 ```
 Without email notification:
 ```
-./bin/acme.sh [--install|-i] [--no-email|-ne]
+./bin/acme.sh [-I, --install] [-NE, --no-email]
 ```
 ### Applying a Let's Encrypt Certificate
 Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
 ```
-./bin/acme.sh [-domain|-d] example.com
+./bin/acme.sh [-D, --domain] example.com
 ```
 ### Update Web Server
 To upgrade the web server to latest stable version, run the following:
 ```
-bash bin/webadmin.sh [-lsup|-upgrade]
+bash bin/webadmin.sh [-U, --upgrade]
 ```
 ### Apply OWASP ModSecurity
 Enable OWASP `mod_secure` on the web server: 

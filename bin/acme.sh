@@ -7,6 +7,13 @@ UNINSTALL=''
 TYPE=0
 CONT_NAME='litespeed'
 ACME_SRC='https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh'
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
     case ${1} in
@@ -14,13 +21,18 @@ help_message(){
         echo 'You will need to install acme script at the first time.'
         echo 'Please run acme.sh --install --email example@example.com'
         ;;
-    "2")    
-        echo 'Command [--install] [--email EMAIL_ADDR]'
-        echo 'Command [--install] [--no-email]'
-        echo 'Command [--domain DOMAIN_NAME]'    
-        echo 'Example: acme.sh --install --email example@example.com'
-        echo 'Example: acme.sh --install --no-email'
-        echo 'Example: acme.sh --domain example.com'
+    "2")
+        echo -e "\033[1mOPTIONS\033[0m" 
+        echow '-D, --domain [DOMAIN_NAME]'         
+        echo "${EPACE}${EPACE}Example: acme.sh --domain example.com"
+        echo "${EPACE}${EPACE}will auto detect and apply for both example.com and www.example.com domains."
+        echow '-H, --help'
+        echo "${EPACE}${EPACE}Display help and exit."
+        echo -e "\033[1m   Only for the First time\033[0m"
+        echow '--install --email [EMAIL_ADDR]'
+        echo "${EPACE}${EPACE}Will install ACME with the Email provided"  
+        echow '--install --no-email'
+        echo "${EPACE}${EPACE}Will install ACME without the Email."        
         exit 0
         ;;
     "3")
@@ -178,22 +190,22 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message 2
             ;;
-        -d | -domain | --domain) shift
+        -[dD] | -domain | --domain) shift
             check_input "${1}"
             DOMAIN="${1}"
             ;;
-        -i | --install ) 
+        -[iI] | --install ) 
             INSTALL=true
             ;;
-        -u | --uninstall )
+        -[uU] | --uninstall )
             UNINSTALL=true
             uninstall_acme
             ;;            
-        -e | --email ) shift
+        -[eE] | --email ) shift
             check_input "${1}"
             EMAIL="${1}"
             ;;
-        -ne | --no-email ) shift
+        -NE | --no-email ) shift
             NO_EMAIL=true
             ;;            
         *) 

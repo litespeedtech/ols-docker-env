@@ -1,17 +1,27 @@
 #!/usr/bin/env bash
 CONT_NAME='litespeed'
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
-    echo 'Command [PASSWORD]'
-    echo 'Example: webadmin.sh mypassword'
-    echo 'Command [-r]'
-    echo 'Example: webadmin.sh -r' 
-    echo 'Will restart LiteSpeed Web Server'
-    echo 'Command [-modsec] [enable|disable]'
-    echo 'Example: webadmin -modsec enable'
-    echo 'Command [-lsup]'
-    echo 'Example: webadmin.sh -lsup'
-    echo 'Will upgrade to latest stable version' 
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow '[Enter Your PASSWORD]'
+    echo "${EPACE}${EPACE}Example: webadmin.sh MY_SECURE_PASS, to update web admin password immediatly."
+    echow '-R, --restart'
+    echo "${EPACE}${EPACE}Will gracefully restart LiteSpeed Web Server."
+    echow '-M, --mod-secure [enable|disable]'
+    echo "${EPACE}${EPACE}Example: webadmin.sh -M enable, will enable and apply Mod_Secure OWASP rules on server"
+    echow '-U, --upgrade'
+    echo "${EPACE}${EPACE}Will upgrade web server to latest stable version"
+    echow '-S, --serial [YOUR_SERIAL|TRIAL]'
+    echo "${EPACE}${EPACE}Will apply your serial number to LiteSpeed Web Server."
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help and exit."
     exit 0
 }
 
@@ -24,6 +34,11 @@ check_input(){
 
 lsws_restart(){
     docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+}
+
+apply_serial(){
+    docker-compose exec ${CONT_NAME} su -c "serialctl.sh -s ${1}"
+    lsws_restart
 }
 
 mod_secure(){
@@ -62,12 +77,15 @@ while [ ! -z "${1}" ]; do
         -[rR] | -restart | --restart)
             lsws_restart
             ;;
-        -modsec | -sec| --sec) shift
+        -M | -mode-secure | --mod-secure) shift
             mod_secure ${1}
             ;;
-        -lsup | -upgrade) shift
+        -lsup | --lsup | --upgrade | -U) shift
             ls_upgrade
-            ;;            
+            ;;
+        -[sS] | -serial | --serial) shift
+            apply_serial ${1}
+            ;;             
         *) 
             main ${1}
             ;;              

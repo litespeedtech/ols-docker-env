@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 CONT_NAME='litespeed'
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
-    echo 'Command [-add|-del] [domain_name]'
-    echo 'Example 1: domain.sh -add example.com'
-    echo 'Example 2: domain.sh -del example.com'
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow "-A, --add [domain_name]"
+    echo "${EPACE}${EPACE}Example: domain.sh -A example.com, will add the domain to Listener and auto create a new virtual host."
+    echow "-D, --del [domain_name]"
+    echo "${EPACE}${EPACE}Example: domain.sh -D example.com, will delete the domain from Listener."
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help and exit."    
 }
 
 check_input(){
@@ -35,10 +46,10 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message
             ;;
-        -add | -a | -A) shift
+        -[aA] | -add | --add) shift
             add_domain ${1}
             ;;
-        -del | -d | -D | -delete) shift
+        -[dD] | -del | --del | --delete) shift
             del_domain ${1}
             ;;          
         *) 

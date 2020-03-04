@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 APP_NAME=''
 DOMAIN=''
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
-    echo 'Command [-app app_name] [-domain domain_name]'
-    echo 'Example: appinstall.sh -app wordpress -d example.com'
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow '-A, --app [app_name] -D, --domain [DOMAIN_NAME]'
+    echo "${EPACE}${EPACE}Example: appinstall.sh -A wordpress -D example.com"
+    echo "${EPACE}${EPACE}Will install WordPress CMS under the example.com domain"
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help and exit."
+    exit 0
 }
 
 check_input(){
@@ -30,11 +42,11 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message
             ;;
-        -app | -a | -A) shift
+        -[aA] | -app | --app) shift
             check_input "${1}"
             APP_NAME="${1}"
             ;;
-        -d | -D | -domain) shift
+        -[dD] | -domain | --domain) shift
             check_input "${1}"
             DOMAIN="${1}"
             ;;          
