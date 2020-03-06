@@ -72,8 +72,8 @@ www_domain(){
 }
 
 add_ls_domain(){
-    fst_match_line 'ccl.xml</templateFile>' ${LS_HTTPD_CONF}
-    NEWNUM=$((FIRST_LINE_NUM+1))
+    fst_match_line 'docker.xml</templateFile>' ${LS_HTTPD_CONF}
+    NEWNUM=$((FIRST_LINE_NUM+2))
     sed -i "${NEWNUM}i \ \ \ \ \ \ <member>\n \ \ \ \ \ \ \ <vhName>${DOMAIN}</vhName>\n \ \ \ \ \ \ \ <vhDomain>${DOMAIN},${WWW_DOMAIN}</vhDomain>\n \ \ \ \ \ \ </member>" ${LS_HTTPD_CONF}
 }
 
