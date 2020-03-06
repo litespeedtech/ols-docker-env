@@ -1,11 +1,20 @@
 #!/bin/bash
 LSDIR='/usr/local/lsws'
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
-    echo 'Command [-serial|-S] SERIAL'
-    echo 'Example: serialctl.sh -s SERIAL'
-    echo 'Example: serialctl.sh -s TRIAL'
-	exit 0
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow '-S, --serial [YOUR_SERIAL|TRIAL]'
+    echo "${EPACE}${EPACE}Will apply and register the serial to LSWS."
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help and exit."       
+    exit 0
 }
 
 check_input(){
@@ -64,7 +73,7 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message
             ;;
-        -[sS] | -serial) shift
+        -[sS] | -serial | --serial) shift
             apply_serial "${1}"
             ;;            
         *)

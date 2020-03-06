@@ -3,11 +3,22 @@ CK_RESULT=''
 LSDIR='/usr/local/lsws'
 LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
 OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
-    echo 'Command [-add|-del] [domain_name]'
-    echo 'Example 1: domainctl.sh -add example.com'
-    echo 'Example 2: domainctl.sh -del example.com'
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow '-A, --add [DOMAIN_NAME]'
+    echo "${EPACE}${EPACE}Will add domain to listener and creat a virtual host from template"
+    echow '-D, --del [DOMAIN_NAME]'
+    echo "${EPACE}${EPACE}Will delete domain from listener"
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help."    
 }
 
 check_lsv(){
@@ -135,10 +146,10 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message
             ;;
-        -add | -a | -A) shift
+        -[aA] | -add | --add) shift
             add_domain ${1}
             ;;
-        -del | -d | -D | -delete) shift
+        -[dD] | -del | --del | --delete) shift
             del_domain ${1}
             ;;          
         *) 

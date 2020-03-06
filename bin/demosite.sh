@@ -59,7 +59,7 @@ EOT
 }
 
 app_download(){
-    docker-compose exec ${CONT_NAME} su -c "appinstallctl.sh -app ${1} -domain ${2}"
+    docker-compose exec ${CONT_NAME} su -c "appinstallctl.sh --app ${1} --domain ${2}"
 }
 
 lsws_restart(){

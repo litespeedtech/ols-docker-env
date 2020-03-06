@@ -4,11 +4,22 @@ OWASP_DIR="${LSDIR}/conf/owasp"
 RULE_FILE='modsec_includes.conf'
 LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
 OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
+EPACE='        '
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 help_message(){
-    echo 'Command [-enable|-disable]'
-    echo 'Example: owaspctl.sh -enable'
-    echo 'Enable mod_secure module with latest OWASP version of rules'
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow '-E, --enable'
+    echo "${EPACE}${EPACE}Will Enable mod_secure module with latest OWASP version of rules"
+    echow '-D, --disable'
+    echo "${EPACE}${EPACE}Will Disable mod_secure module with latest OWASP version of rules" 
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help and exit."       
     exit 0
 }
 
@@ -118,6 +129,7 @@ disable_ls_modesec(){
 }
 
 disable_modsec(){
+    check_lsv
     if [ "${LSV}" = 'lsws' ]; then
         disable_ls_modesec
     elif [ "${LSV}" = 'openlitespeed' ]; then
@@ -195,6 +207,8 @@ main_owasp(){
     install_git
     install_owasp
     configure_owasp
+    check_lsv
+    enable_modsec    
 }
 
 check_input ${1}
@@ -203,13 +217,10 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message
             ;;
-        -enable | -e | -E)
+        -[eE] | -enable | --enable)
             main_owasp
-            check_lsv
-            enable_modsec
             ;;
-        -disable | -d | -D)
-            check_lsv
+        -[dD] | -disable | --disable)
             disable_modsec
             ;;          
         *) 
