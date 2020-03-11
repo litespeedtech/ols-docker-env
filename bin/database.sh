@@ -78,17 +78,20 @@ EOT
     fi    
 }
 
-add_sql_client(){
-    docker-compose exec mysql su -c 'apk add mysql-client'
-}
-
 check_db_access(){
-    #add_sql_client
     docker-compose exec mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     if [ ${?} != 0 ]; then
-        echo "DB access failed, please check!"
+        echo '[X] DB access failed, please check!'
         exit 1
     fi    
+}
+
+check_db_exist(){
+    docker-compose exec mysql su -c "test -e /var/lib/mysql/${1}"
+    if [ ${?} = 0 ]; then
+        echo "Database ${1} already exist, skip DB creation!"
+        exit 0    
+    fi      
 }
 
 db_setup(){  
@@ -104,6 +107,7 @@ auto_setup_main(){
     gen_pass
     trans_name ${DOMAIN}
     auto_name
+    check_db_exist ${SQL_DB}
     check_db_access
     db_setup
     display_credential
@@ -112,6 +116,7 @@ auto_setup_main(){
 
 specify_setup_main(){
     specify_name
+    check_db_exist ${SQL_DB}
     check_db_access
     db_setup
     display_credential
