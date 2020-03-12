@@ -1,6 +1,5 @@
 # OpenLiteSpeed WordPress Docker Container
 [![Build Status](https://travis-ci.com/litespeedtech/ols-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/openlitespeed)
-[<img src="https://img.shields.io/github/contributors/litespeedtech/ls-cloud-image.svg">](https://github.com/litespeedtech/ls-cloud-image/graphs/contributors) 
 [![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
@@ -110,6 +109,7 @@ bash bin/demosite.sh
 ```
 bash bin/domain.sh [-A, --add] example.com
 ```
+> Please ignore SSL certificate warnings from the server. They happen if you haven't applied the certificate.
 ### Deleting a Domain and Virtual Host
 ```
 bash bin/domain.sh [-D, --del] example.com
@@ -157,7 +157,7 @@ Disable OWASP `mod_secure` on the web server:
 ```
 bash bin/webadmin.sh [-M, --mod-secure] disable
 ```
-
+>Please ignore ModSecurity warnings from the server. They happen if some of the rules are not supported by the server.
 ### Accessing the Database
 After installation, you can use phpMyAdmin to access the database by visiting `http://127.0.0.1:8080` or `https://127.0.0.1:8443`. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
