@@ -36,7 +36,7 @@ help_message(){
         exit 0
         ;;
     "3")
-        echo 'Please run acme.sh -domain example.com to apply certificate'
+        echo 'Please run acme.sh --domain [DOMAIN_NAME] to apply certificate'
         exit 0
         ;;
     esac
