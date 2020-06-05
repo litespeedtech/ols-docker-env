@@ -32,7 +32,8 @@ services:
     environment:
       TZ: ${TimeZone}
   phpmyadmin:
-    image: bitnami/phpmyadmin:latest
+    #image: bitnami/phpmyadmin:latest
+    image: bitnami/phpmyadmin:5.0.2-debian-10-r72
     ports:
       - 8080:80
       - 8443:443
