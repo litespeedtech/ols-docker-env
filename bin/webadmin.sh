@@ -60,8 +60,12 @@ ls_upgrade(){
 
 set_web_admin(){
     echo 'Update web admin password.'
+    local LSADPATH='/usr/local/lsws/admin'
     docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
-        'echo "admin:$(/usr/local/lsws/admin/fcgi-bin/admin_php* -q /usr/local/lsws/admin/misc/htpasswd.php '${1}')" > /usr/local/lsws/admin/conf/htpasswd';
+        'if [ -e /usr/local/lsws/admin/fcgi-bin/admin_php ]; then \
+        echo "admin:$('${LSADPATH}'/fcgi-bin/admin_php -q '${LSADPATH}'/misc/htpasswd.php '${1}')" > '${LSADPATH}'/conf/htpasswd; \
+        else echo "admin:$('${LSADPATH}'/fcgi-bin/admin_php5 -q '${LSADPATH}'/misc/htpasswd.php '${1}')" > '${LSADPATH}'/conf/htpasswd; \
+        fi';
 }
 
 main(){
