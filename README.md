@@ -167,7 +167,7 @@ If you want to customize the image by adding some packages, e.g. `lsphp74-pspell
 2. Add the following example code to `Dockerfile` under the custom folder
 ```
 FROM litespeedtech/openlitespeed:latest
-RUN apt-get update && apt-get install lsphp74-pspell
+RUN apt-get update && apt-get install lsphp74-pspell -y
 ```
 3. Add `build: ./custom` line under the "image: litespeedtech" of docker-composefile. So it will looks like this 
 ```
