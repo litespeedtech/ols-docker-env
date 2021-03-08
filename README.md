@@ -1,5 +1,5 @@
 # OpenLiteSpeed WordPress Docker Container
-[![Build Status](https://travis-ci.com/litespeedtech/ols-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/openlitespeed)
+[![Build Status](https://github.com/litespeedtech/ols-docker-env/workflows/docker-build/badge.svg)](https://github.com/litespeedtech/ols-docker-env/actions/)
 [![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/openlitespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/openlitespeed)
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
@@ -33,7 +33,7 @@ The docker image installs the following packages on your system:
 | :-------------: | :-------------: |
 |Linux|Ubuntu 18.04|
 |OpenLiteSpeed|[Latest version](https://openlitespeed.org/downloads/)|
-|MariaDB|[Stable version: 10.3](https://hub.docker.com/_/mariadb)|
+|MariaDB|[Stable version: 10.5](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|

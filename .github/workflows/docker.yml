@@ -1,0 +1,28 @@
+name: docker-build
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: |
+          docker-compose -v
+          docker-compose up -d
+          docker image ls
+          sleep 10
+      - name: Verify
+        run: bash .travis/verify.sh    
+      - name: Clean up 
+        run: |
+         docker-compose stop
+         docker-compose rm -f            

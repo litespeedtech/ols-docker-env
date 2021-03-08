@@ -1,7 +1,7 @@
 version: '3'
 services:
   mysql:
-    image: mariadb:10.3.17
+    image: mariadb:10.5.9
     command: --max_allowed_packet=256M
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
@@ -33,7 +33,6 @@ services:
     environment:
       TZ: ${TimeZone}
   phpmyadmin:
-    #image: bitnami/phpmyadmin:latest
     image: bitnami/phpmyadmin:5.0.2-debian-10-r72
     ports:
       - 8080:80

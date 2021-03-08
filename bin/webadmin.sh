@@ -33,7 +33,7 @@ check_input(){
 }
 
 lsws_restart(){
-    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+    docker-compose exec -T ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 }
 
 apply_serial(){
