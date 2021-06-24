@@ -30,9 +30,7 @@ help_message(){
         echo "${EPACE}${EPACE}Display help and exit."
         echo -e "\033[1m   Only for the First time\033[0m"
         echow '--install --email [EMAIL_ADDR]'
-        echo "${EPACE}${EPACE}Will install ACME with the Email provided"  
-        echow '--install --no-email'
-        echo "${EPACE}${EPACE}Will install ACME without the Email."        
+        echo "${EPACE}${EPACE}Will install ACME with the Email provided"       
         exit 0
         ;;
     "3")
@@ -204,10 +202,7 @@ while [ ! -z "${1}" ]; do
         -[eE] | --email ) shift
             check_input "${1}"
             EMAIL="${1}"
-            ;;
-        -NE | --no-email ) shift
-            NO_EMAIL=true
-            ;;            
+            ;;           
         *) 
             help_message 2
             ;;              

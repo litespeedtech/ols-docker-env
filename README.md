@@ -134,10 +134,6 @@ With email notification:
 ```
 ./bin/acme.sh [-I, --install] [-E, --email] EMAIL_ADDR
 ```
-Without email notification:
-```
-./bin/acme.sh [-I, --install] [-NE, --no-email]
-```
 ### Applying a Let's Encrypt Certificate
 Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
 ```
