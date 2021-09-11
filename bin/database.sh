@@ -64,17 +64,17 @@ display_credential(){
 }
 
 store_credential(){
-    if [ -d "./sites/${1}" ]; then
-        if [ -f ./sites/${1}/.db_pass ]; then 
-            mv ./sites/${1}/.db_pass ./sites/${1}/.db_pass.bk
+    if [ -d "~/sites/${1}" ]; then
+        if [ -f ~/sites/${1}/.db_pass ]; then 
+            mv ~/sites/${1}/.db_pass ~/sites/${1}/.db_pass.bk
         fi
-        cat > "./sites/${1}/.db_pass" << EOT
+        cat > "~/sites/${1}/.db_pass" << EOT
 "Database":"${SQL_DB}"
 "Username":"${SQL_USER}"
 "Password":"$(echo ${SQL_PASS} | tr -d "'")"
 EOT
     else
-        echo "./sites/${1} not found, abort credential store!"
+        echo "~/sites/${1} not found, abort credential store!"
     fi    
 }
 

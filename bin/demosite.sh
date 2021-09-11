@@ -38,8 +38,8 @@ domain_filter(){
 }
 
 gen_root_fd(){
-    DOC_FD="./sites/${1}/"
-    if [ -d "./sites/${1}" ]; then
+    DOC_FD="~/sites/${1}/"
+    if [ -d "~/sites/${1}" ]; then
         echo -e "[O] The root folder \033[32m${DOC_FD}\033[0m exist."
     else
         echo "Creating - document root."
