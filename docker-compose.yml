@@ -24,7 +24,7 @@ services:
         - ./lsws/admin-conf:/usr/local/lsws/admin/conf
         - ./bin/container:/usr/local/bin
         - type: bind
-          source: /home/ec2-user/sites
+          source: $HOME/sites
           target: /var/www/vhosts/
         - ./acme:/root/.acme.sh/
         - ./logs:/usr/local/lsws/logs/
