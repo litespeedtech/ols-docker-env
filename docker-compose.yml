@@ -1,5 +1,6 @@
 version: '3'
 services:
+  # database
   mysql:
     image: mariadb:10.5.9
     command: --max_allowed_packet=256M
@@ -13,6 +14,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     restart: always
+  # web server
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
     env_file:
@@ -21,7 +23,9 @@ services:
         - ./lsws/conf:/usr/local/lsws/conf
         - ./lsws/admin-conf:/usr/local/lsws/admin/conf
         - ./bin/container:/usr/local/bin
-        - ./sites:/var/www/vhosts/
+        - type: bind
+          source: $HOME/sites
+          target: /var/www/vhosts/
         - ./acme:/root/.acme.sh/
         - ./logs:/usr/local/lsws/logs/
     ports:
@@ -32,6 +36,7 @@ services:
     restart: always
     environment:
       TZ: ${TimeZone}
+  # phpmyadmin
   phpmyadmin:
     image: bitnami/phpmyadmin:5.0.2-debian-10-r72
     ports:
@@ -39,4 +44,4 @@ services:
       - 8443:443
     environment:
         DATABASE_HOST: mysql
-    restart: always    
+    restart: always
