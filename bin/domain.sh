@@ -28,8 +28,8 @@ check_input(){
 add_domain(){
     check_input ${1}
     docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --add ${1}"
-    if [ ! -d "~/sites/${1}" ]; then 
-        mkdir -p ~/sites/${1}/{html,logs,certs}
+    if [ ! -d "$HOME/sites/${1}" ]; then 
+        mkdir -p $HOME/sites/${1}/{html,logs,certs}
     fi
     bash bin/webadmin.sh -r
 }
