@@ -38,10 +38,10 @@ services:
       TZ: ${TimeZone}
   # phpmyadmin
   phpmyadmin:
-    image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+    image: phpmyadmin
     ports:
       - 8080:80
       - 8443:443
     environment:
-        DATABASE_HOST: mysql
+        - PMA_ARBITRARY=1
     restart: always
