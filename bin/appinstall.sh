@@ -2,6 +2,7 @@
 APP_NAME=''
 DOMAIN=''
 EPACE='        '
+REMOTE_HOST=''
 
 echow(){
     FLAG=${1}
@@ -11,9 +12,11 @@ echow(){
 
 help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
-    echow '-A, --app [app_name] -D, --domain [DOMAIN_NAME]'
+    echow '-A, --app [app_name] -D, --domain [DOMAIN_NAME] -R, --remote [REMOTE_HOST]'
     echo "${EPACE}${EPACE}Example: appinstall.sh -A wordpress -D example.com"
     echo "${EPACE}${EPACE}Will install WordPress CMS under the example.com domain"
+    echo "${EPACE}${EPACE}Example: appinstall.sh -A wordpress -D example.com -R test.uid.ap-south-1.rds.amazonaws.com"
+    echo "${EPACE}${EPACE}Will install WordPress CMS under the example.com domain with a remote host configuration"
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit."
     exit 0
@@ -27,13 +30,13 @@ check_input(){
 }
 
 app_download(){
-    docker-compose exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
+    docker-compose exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2} --remote ${3}"
     bash bin/webadmin.sh -r
     exit 0
 }
 
 main(){
-    app_download ${APP_NAME} ${DOMAIN}
+    app_download ${APP_NAME} ${DOMAIN} ${REMOTE_HOST}
 }
 
 check_input ${1}
@@ -49,7 +52,11 @@ while [ ! -z "${1}" ]; do
         -[dD] | -domain | --domain) shift
             check_input "${1}"
             DOMAIN="${1}"
-            ;;          
+            ;;
+        -[R] | -remote | --remote) shift
+            check_input "${1}"
+            REMOTE_HOST="${1}"
+            ;;	    
         *) 
             help_message
             ;;              

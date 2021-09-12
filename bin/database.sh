@@ -8,6 +8,7 @@ SQL_PASS=''
 ANY="'%'"
 SET_OK=0
 EPACE='        '
+REMOTE_HOST=''
 
 echow(){
     FLAG=${1}
@@ -123,8 +124,20 @@ specify_setup_main(){
     store_credential ${DOMAIN}
 }
 
+specify_setup_remote(){
+    specify_name
+    check_input ${REMOTE_HOST}
+    db_setup
+    display_credential
+    store_credential ${DOMAIN}
+}
+
 main(){
-    if [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ]; then
+    if [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ] && [ "${REMOTE_HOST}" != ''  ]; then
+        specify_setup_remote
+    elif [ "${REMOTE_HOST}" != ''  ]; then
+	    printf "Please supply details in this format:\n\t database.sh -U user_name -P password -DB database -D domain -R remote_host \n"
+    elif [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ]; then
         specify_setup_main
     else
         auto_setup_main
@@ -148,8 +161,11 @@ while [ ! -z "${1}" ]; do
             ;;            
         -db | -DB | -database| --database) shift
             SQL_DB="${1}"
-            ;;            
-        *) 
+            ;;
+        -R | --remote) shift
+            REMOTE_HOST="${1}"
+	    ;;	    
+        *)
             help_message
             ;;              
     esac

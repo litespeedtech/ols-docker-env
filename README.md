@@ -123,10 +123,15 @@ Use this command to specify your own names, substituting `user_name`, `my_passwo
 ```
 bash bin/database.sh [-D, --domain] example.com [-U, --user] USER_NAME [-P, --password] MY_PASS [-DB, --database] DATABASE_NAME
 ```
+Additionally, if you want to use a RDS instance or an external database instance, you can skip this local database creation step altogether and configure the database properties only in the next section.
 ### Installing a WordPress Site
 To preconfigure the `wp-config` file, run the `database.sh` script for your domain, before you use the following command to install WordPress:
 ```
 ./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com
+```
+Additionally, if you want to install a wordpress configured for a remote database, remember to pass in the remote DB host details.
+```
+./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com [-R, --remote] test.uid.ap-south-1.rds.amazonaws.com
 ```
 ### Install ACME 
 We need to run the ACME installation command the **first time only**. 

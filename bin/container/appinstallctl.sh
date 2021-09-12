@@ -3,7 +3,8 @@ DEFAULT_VH_ROOT='/var/www/vhosts'
 VH_DOC_ROOT=''
 VHNAME=''
 APP_NAME=''
-DOMAIN=''
+DOMAiIN=''
+REMOTE_HOST=''
 WWW_UID=''
 WWW_GID=''
 WP_CONST_CONF=''
@@ -95,7 +96,11 @@ set_vh_docroot(){
 check_sql_native(){
 	local COUNTER=0
 	local LIMIT_NUM=100
-	until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
+	local TEST_HOST="mysql"
+	if [ ! -z "${REMOTE_HOST}" ]; then
+		TEST_HOST="${REMOTE_HOST}"
+	fi
+	until [ "$(curl -v "${TEST_HOST}":3306 2>&1 | grep -i 'native\|Connected')" ]; do
 		echo "Counter: ${COUNTER}/${LIMIT_NUM}"
 		COUNTER=$((COUNTER+1))
 		if [ ${COUNTER} = 10 ]; then
@@ -572,7 +577,6 @@ preinstall_wordpress(){
 		linechange 'DB_USER' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 		NEWDBPWD="define('DB_NAME', '${SQL_DB}');"
 		linechange 'DB_NAME' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
-        #NEWDBPWD="define('DB_HOST', '${PUB_IP}');"
 		NEWDBPWD="define('DB_HOST', '${DB_HOST}');"
 		linechange 'DB_HOST' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 	elif [ -f ${VH_DOC_ROOT}/wp-config.php ]; then
@@ -639,8 +643,12 @@ while [ ! -z "${1}" ]; do
 			;;
 		-vhname | --vhname) shift
 			VHNAME="${1}"
-			;;	       
-		*) 
+			;;
+		--remote) shift
+	                REMOTE_HOST="${1}"
+			DB_HOST="${1}"
+			;;		
+		*)
 			help_message
 			;;              
 	esac
