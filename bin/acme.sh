@@ -8,6 +8,9 @@ TYPE=0
 CONT_NAME='litespeed'
 ACME_SRC='https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh'
 EPACE='        '
+RENEW=''
+RENEW_ALL=''
+FORCE=''
 
 echow(){
     FLAG=${1}
@@ -172,6 +175,30 @@ install_cert(){
     echo '[End] Apply Lets Encrypt Certificate'
 }
 
+renew_acme(){
+    echo '[Start] Renew ACME'
+    if [ "${FORCE}" = 'true' ]; then
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} --force"
+    else
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1}"
+    fi
+    echo '[End] Renew ACME'
+    lsws_restart
+    exit 0
+}
+
+renew_all_acme(){
+    echo '[Start] Renew all ACME'
+    if [ "${FORCE}" = 'true' ]; then
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all --force"
+    else
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all"
+    fi
+    echo '[End] Renew all ACME'
+    lsws_restart
+    exit 0
+}
+
 main(){
     check_acme
     domain_filter ${DOMAIN}
@@ -198,7 +225,18 @@ while [ ! -z "${1}" ]; do
         -[uU] | --uninstall )
             UNINSTALL=true
             uninstall_acme
-            ;;            
+            ;;
+        -[fF] | --force ) 
+            FORCE=true
+            ;;
+        -[r] | --renew )
+            RENEW_=true
+            renew_acme ${DOMAIN}
+            ;;
+        -[R] | --renew-all )
+            RENEW_ALL=true
+            renew_all_acme
+            ;;
         -[eE] | --email ) shift
             check_input "${1}"
             EMAIL="${1}"
