@@ -34,6 +34,12 @@ help_message(){
         echo -e "\033[1m   Only for the First time\033[0m"
         echow '--install --email [EMAIL_ADDR]'
         echo "${EPACE}${EPACE}Will install ACME with the Email provided"       
+        echow '-r, --renew'
+        echo "${EPACE}${EPACE}Renew a specific domain with -D or --domain parameter if posibile. To force renew, use -f parameter."
+        echow '-R, --renew-all'
+        echo "${EPACE}${EPACE}Renew all domains if possible. To force renew, use -f parameter."
+        echow '-f, -F, --force'
+        echo "${EPACE}${EPACE}Force renew for a specific domain or all domains."
         exit 0
         ;;
     "3")
@@ -184,7 +190,6 @@ renew_acme(){
     fi
     echo '[End] Renew ACME'
     lsws_restart
-    exit 0
 }
 
 renew_all_acme(){
@@ -196,10 +201,17 @@ renew_all_acme(){
     fi
     echo '[End] Renew all ACME'
     lsws_restart
-    exit 0
 }
 
 main(){
+    if [ "${RENEW_ALL}" = 'true' ]; then
+        renew_all_acme
+        exit 0
+    elif [ "${RENEW}" = 'true' ]; then
+        renew_acme ${DOMAIN}
+        exit 0
+    fi
+
     check_acme
     domain_filter ${DOMAIN}
     www_domain ${DOMAIN}
@@ -230,12 +242,10 @@ while [ ! -z "${1}" ]; do
             FORCE=true
             ;;
         -[r] | --renew )
-            RENEW_=true
-            renew_acme ${DOMAIN}
+            RENEW=true
             ;;
         -[R] | --renew-all )
             RENEW_ALL=true
-            renew_all_acme
             ;;
         -[eE] | --email ) shift
             check_input "${1}"
