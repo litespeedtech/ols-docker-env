@@ -2,6 +2,8 @@ version: '3'
 services:
   mysql:
     image: mariadb:10.5.9
+    logging:
+      driver: none
     command: --max_allowed_packet=256M
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
@@ -15,6 +17,8 @@ services:
     restart: always
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    logging:
+      driver: none
     env_file:
       - .env
     volumes:
@@ -34,6 +38,8 @@ services:
       TZ: ${TimeZone}
   phpmyadmin:
     image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+    logging:
+      driver: none
     ports:
       - 8080:80
       - 8443:443
