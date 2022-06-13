@@ -11,6 +11,8 @@ EPACE='        '
 RENEW=''
 RENEW_ALL=''
 FORCE=''
+REVOKE=''
+REMOVE=''
 
 echow(){
     FLAG=${1}
@@ -40,6 +42,10 @@ help_message(){
         echo "${EPACE}${EPACE}Renew all domains if possible. To force renew, use -f parameter."
         echow '-f, -F, --force'
         echo "${EPACE}${EPACE}Force renew for a specific domain or all domains."
+        echow '-v, --revoke'
+        echo "${EPACE}${EPACE}Revoke a domain."
+        echow '-V, --remove'
+        echo "${EPACE}${EPACE}Remove a domain."
         exit 0
         ;;
     "3")
@@ -203,12 +209,32 @@ renew_all_acme(){
     lsws_restart
 }
 
+revoke(){
+    echo '[Start] Revoke a domain'
+    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --revoke --domain ${1}"
+    echo '[End] Revoke a domain'
+    lsws_restart
+}
+
+remove(){
+    echo '[Start] Remove a domain'
+    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --remove --domain ${1}"
+    echo '[End] Remove a domain'
+    lsws_restart
+}
+
 main(){
     if [ "${RENEW_ALL}" = 'true' ]; then
         renew_all_acme
         exit 0
     elif [ "${RENEW}" = 'true' ]; then
         renew_acme ${DOMAIN}
+        exit 0
+    elif [ "${REVOKE}" = 'true' ]; then
+        revoke ${DOMAIN}
+        exit 0
+    elif [ "${REMOVE}" = 'true' ]; then
+        remove ${DOMAIN}
         exit 0
     fi
 
@@ -246,6 +272,12 @@ while [ ! -z "${1}" ]; do
             ;;
         -[R] | --renew-all )
             RENEW_ALL=true
+            ;;
+        -[v] | --revoke )
+            REVOKE=true
+            ;;
+        -[V] | --remove )
+            REMOVE=true
             ;;
         -[eE] | --email ) shift
             check_input "${1}"
