@@ -2,28 +2,32 @@ version: '3'
 services:
   mysql:
     image: mariadb:10.5.9
+    logging:
+      driver: none
     command: --max_allowed_packet=256M
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
-    ports:
-       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     restart: always
+    networks:
+      - default
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    logging:
+      driver: none
     env_file:
       - .env
     volumes:
-        - ./lsws/conf:/usr/local/lsws/conf
-        - ./lsws/admin-conf:/usr/local/lsws/admin/conf
-        - ./bin/container:/usr/local/bin
-        - ./sites:/var/www/vhosts/
-        - ./acme:/root/.acme.sh/
-        - ./logs:/usr/local/lsws/logs/
+      - ./lsws/conf:/usr/local/lsws/conf
+      - ./lsws/admin-conf:/usr/local/lsws/admin/conf
+      - ./bin/container:/usr/local/bin
+      - ./sites:/var/www/vhosts/
+      - ./acme:/root/.acme.sh/
+      - ./logs:/usr/local/lsws/logs/
     ports:
       - 80:80
       - 443:443
@@ -32,11 +36,20 @@ services:
     restart: always
     environment:
       TZ: ${TimeZone}
+    networks:
+      - default
   phpmyadmin:
     image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+    logging:
+      driver: none
     ports:
       - 8080:80
       - 8443:443
     environment:
-        DATABASE_HOST: mysql
-    restart: always    
+      DATABASE_HOST: mysql
+    restart: always
+    networks:
+      - default
+networks:
+  default:
+    driver: bridge

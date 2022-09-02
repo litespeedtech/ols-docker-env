@@ -8,6 +8,11 @@ TYPE=0
 CONT_NAME='litespeed'
 ACME_SRC='https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh'
 EPACE='        '
+RENEW=''
+RENEW_ALL=''
+FORCE=''
+REVOKE=''
+REMOVE=''
 
 echow(){
     FLAG=${1}
@@ -31,6 +36,16 @@ help_message(){
         echo -e "\033[1m   Only for the First time\033[0m"
         echow '--install --email [EMAIL_ADDR]'
         echo "${EPACE}${EPACE}Will install ACME with the Email provided"       
+        echow '-r, --renew'
+        echo "${EPACE}${EPACE}Renew a specific domain with -D or --domain parameter if posibile. To force renew, use -f parameter."
+        echow '-R, --renew-all'
+        echo "${EPACE}${EPACE}Renew all domains if possible. To force renew, use -f parameter."
+        echow '-f, -F, --force'
+        echo "${EPACE}${EPACE}Force renew for a specific domain or all domains."
+        echow '-v, --revoke'
+        echo "${EPACE}${EPACE}Revoke a domain."
+        echow '-V, --remove'
+        echo "${EPACE}${EPACE}Remove a domain."
         exit 0
         ;;
     "3")
@@ -172,7 +187,57 @@ install_cert(){
     echo '[End] Apply Lets Encrypt Certificate'
 }
 
+renew_acme(){
+    echo '[Start] Renew ACME'
+    if [ "${FORCE}" = 'true' ]; then
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} --force"
+    else
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1}"
+    fi
+    echo '[End] Renew ACME'
+    lsws_restart
+}
+
+renew_all_acme(){
+    echo '[Start] Renew all ACME'
+    if [ "${FORCE}" = 'true' ]; then
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all --force"
+    else
+        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all"
+    fi
+    echo '[End] Renew all ACME'
+    lsws_restart
+}
+
+revoke(){
+    echo '[Start] Revoke a domain'
+    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --revoke --domain ${1}"
+    echo '[End] Revoke a domain'
+    lsws_restart
+}
+
+remove(){
+    echo '[Start] Remove a domain'
+    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --remove --domain ${1}"
+    echo '[End] Remove a domain'
+    lsws_restart
+}
+
 main(){
+    if [ "${RENEW_ALL}" = 'true' ]; then
+        renew_all_acme
+        exit 0
+    elif [ "${RENEW}" = 'true' ]; then
+        renew_acme ${DOMAIN}
+        exit 0
+    elif [ "${REVOKE}" = 'true' ]; then
+        revoke ${DOMAIN}
+        exit 0
+    elif [ "${REMOVE}" = 'true' ]; then
+        remove ${DOMAIN}
+        exit 0
+    fi
+
     check_acme
     domain_filter ${DOMAIN}
     www_domain ${DOMAIN}
@@ -198,7 +263,22 @@ while [ ! -z "${1}" ]; do
         -[uU] | --uninstall )
             UNINSTALL=true
             uninstall_acme
-            ;;            
+            ;;
+        -[fF] | --force ) 
+            FORCE=true
+            ;;
+        -[r] | --renew )
+            RENEW=true
+            ;;
+        -[R] | --renew-all )
+            RENEW_ALL=true
+            ;;
+        -[v] | --revoke )
+            REVOKE=true
+            ;;
+        -[V] | --remove )
+            REMOVE=true
+            ;;
         -[eE] | --email ) shift
             check_input "${1}"
             EMAIL="${1}"
