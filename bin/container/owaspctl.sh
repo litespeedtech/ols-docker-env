@@ -140,6 +140,7 @@ disable_modsec(){
 install_git(){
     if [ ! -f /usr/bin/git ]; then
         echo 'Install git'
+        apt update >/dev/null 2>&1
         apt-get install git -y >/dev/null 2>&1
     fi
 }
