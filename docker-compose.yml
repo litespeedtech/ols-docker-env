@@ -39,14 +39,12 @@ services:
     networks:
       - default
   phpmyadmin:
-    image: bitnami/phpmyadmin:5.0.2-debian-10-r72
-    logging:
-      driver: none
+    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
     ports:
-      - 8080:80
-      - 8443:443
+      - 8080:8080
+      - 8443:8443
     environment:
-      DATABASE_HOST: mysql
+        DATABASE_HOST: mysql
     restart: always
     networks:
       - default
