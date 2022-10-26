@@ -79,7 +79,7 @@ EOT
 }
 
 check_db_access(){
-    docker-compose exec -T mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
+    docker compose exec -T mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     if [ ${?} != 0 ]; then
         echo '[X] DB access failed, please check!'
         exit 1
@@ -87,7 +87,7 @@ check_db_access(){
 }
 
 check_db_exist(){
-    docker-compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
+    docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
     if [ ${?} = 0 ]; then
         echo "Database ${1} already exist, skip DB creation!"
         exit 0    
@@ -95,7 +95,7 @@ check_db_exist(){
 }
 
 db_setup(){  
-    docker-compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+    docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
     -e "CREATE DATABASE '${SQL_DB}';" \
     -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
     -e "FLUSH PRIVILEGES;"'

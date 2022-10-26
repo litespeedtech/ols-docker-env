@@ -87,7 +87,7 @@ email_filter(){
 
 cert_hook(){
     echo '[Start] Adding ACME hook'
-    docker-compose exec ${CONT_NAME} su -s /bin/bash -c "certhookctl.sh"
+    docker compose exec ${CONT_NAME} su -s /bin/bash -c "certhookctl.sh"
     echo '[End] Adding ACME hook'
 }
 
@@ -122,12 +122,12 @@ domain_verify(){
 install_acme(){
     echo '[Start] Install ACME'
     if [ "${1}" = 'true' ]; then
-        docker-compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
+        docker compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
         ./acme.sh --install --cert-home  ~/.acme.sh/certs; \
         rm ~/acme.sh"
     elif [ "${2}" != '' ]; then
         email_filter "${2}"
-        docker-compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
+        docker compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
         ./acme.sh --install --cert-home  ~/.acme.sh/certs --accountemail  ${2}; \
         rm ~/acme.sh"
     else
@@ -139,14 +139,14 @@ install_acme(){
 
 uninstall_acme(){
     echo '[Start] Uninstall ACME'
-    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --uninstall"
+    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --uninstall"
     echo '[End] Uninstall ACME'
     exit 0
 }    
 
 check_acme(){
     echo '[Start] Checking ACME'
-    docker-compose exec ${CONT_NAME} su -c "test -f /root/.acme.sh/acme.sh"
+    docker compose exec ${CONT_NAME} su -c "test -f /root/.acme.sh/acme.sh"
     if [ ${?} != 0 ]; then
         install_acme "${NO_EMAIL}" "${EMAIL}"
         cert_hook
@@ -156,7 +156,7 @@ check_acme(){
 }
 
 lsws_restart(){
-    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+    docker compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 }
 
 doc_root_verify(){
@@ -165,7 +165,7 @@ doc_root_verify(){
     else
         DOC_PATH="${DOC_ROOT}"    
     fi
-    docker-compose exec ${CONT_NAME} su -c "[ -e ${DOC_PATH} ]"
+    docker compose exec ${CONT_NAME} su -c "[ -e ${DOC_PATH} ]"
     if [ ${?} -eq 0 ]; then
         echo -e "[O] The document root folder \033[32m${DOC_PATH}\033[0m does exist."
     else
@@ -177,9 +177,9 @@ doc_root_verify(){
 install_cert(){
     echo '[Start] Apply Lets Encrypt Certificate'
     if [ ${TYPE} = 1 ]; then
-        docker-compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -w ${DOC_PATH}"
+        docker compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -w ${DOC_PATH}"
     elif [ ${TYPE} = 2 ]; then
-        docker-compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -d www.${1} -w ${DOC_PATH}"
+        docker compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -d www.${1} -w ${DOC_PATH}"
     else
         echo 'unknown Type!'
         exit 2
@@ -190,9 +190,9 @@ install_cert(){
 renew_acme(){
     echo '[Start] Renew ACME'
     if [ "${FORCE}" = 'true' ]; then
-        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} --force"
+        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} --force"
     else
-        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1}"
+        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1}"
     fi
     echo '[End] Renew ACME'
     lsws_restart
@@ -201,9 +201,9 @@ renew_acme(){
 renew_all_acme(){
     echo '[Start] Renew all ACME'
     if [ "${FORCE}" = 'true' ]; then
-        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all --force"
+        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all --force"
     else
-        docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all"
+        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew-all"
     fi
     echo '[End] Renew all ACME'
     lsws_restart
@@ -211,14 +211,14 @@ renew_all_acme(){
 
 revoke(){
     echo '[Start] Revoke a domain'
-    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --revoke --domain ${1}"
+    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --revoke --domain ${1}"
     echo '[End] Revoke a domain'
     lsws_restart
 }
 
 remove(){
     echo '[Start] Remove a domain'
-    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --remove --domain ${1}"
+    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --remove --domain ${1}"
     echo '[End] Remove a domain'
     lsws_restart
 }
