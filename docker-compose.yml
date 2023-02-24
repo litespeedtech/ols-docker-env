@@ -2,6 +2,7 @@ version: '3'
 services:
   mysql:
     image: mariadb:10.5.9
+    container_name: mysql
     logging:
       driver: none
     command: --max_allowed_packet=256M
@@ -13,10 +14,13 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     restart: always
+    ports:
+      - "3306:3306"
     networks:
       - default
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    container_name: litespeed
     logging:
       driver: none
     env_file:
@@ -38,16 +42,17 @@ services:
       TZ: ${TimeZone}
     networks:
       - default
-  phpmyadmin:
-    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
-    ports:
-      - 8080:8080
-      - 8443:8443
-    environment:
-        DATABASE_HOST: mysql
-    restart: always
-    networks:
-      - default
+#  phpmyadmin:
+#    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
+#    container_name: phpmyadmin
+#    ports:
+#      - 8080:8080
+#      - 8443:8443
+#    environment:
+#        DATABASE_HOST: mysql
+#    restart: always
+#    networks:
+#      - default
 networks:
   default:
     driver: bridge

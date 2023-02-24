@@ -111,7 +111,7 @@ domain_verify(){
             echo -e "[O] The domain name \033[32m${WWW_DOMAIN}\033[0m is accessible."
             TYPE=2
         else
-            echo -e "[!] The domain name ${WWW_DOMAIN} is inaccessible." 
+            echo -e "[!] The domain name ${WWW_DOMAIN} is inaccessible."
         fi
     else
         echo -e "[X] The domain name \e[31m${DOMAIN}\e[39m is inaccessible, please verify."

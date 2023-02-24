@@ -12,6 +12,8 @@ help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
     echow "-A, --add [domain_name]"
     echo "${EPACE}${EPACE}Example: domain.sh -A example.com, will add the domain to Listener and auto create a new virtual host."
+    echow '-U, --upd [DOMAIN_NAME] [DOMAIN_STRING]'
+    echo "${EPACE}${EPACE}Will add sub domain to a virtual host"
     echow "-D, --del [domain_name]"
     echo "${EPACE}${EPACE}Example: domain.sh -D example.com, will delete the domain from Listener."
     echow '-H, --help'
@@ -34,6 +36,12 @@ add_domain(){
     bash bin/webadmin.sh -r
 }
 
+update_domain(){
+    check_input ${1}
+    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --upd ${1} ${2}"
+    bash bin/webadmin.sh -r
+}
+
 del_domain(){
     check_input ${1}
     docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --del ${1}"
@@ -49,6 +57,9 @@ while [ ! -z "${1}" ]; do
         -[aA] | -add | --add) shift
             add_domain ${1}
             ;;
+        -[uU] | -upd | --upd) shift
+            update_domain ${1} ${2}
+            ;;
         -[dD] | -del | --del | --delete) shift
             del_domain ${1}
             ;;          
@@ -58,4 +69,3 @@ while [ ! -z "${1}" ]; do
     esac
     shift
 done
-          

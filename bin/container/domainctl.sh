@@ -15,6 +15,8 @@ help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
     echow '-A, --add [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Will add domain to listener and creat a virtual host from template"
+    echow '-U, --upd [DOMAIN_NAME] [DOMAIN_STRING]'
+    echo "${EPACE}${EPACE}Will add sub domain to a virtual host"
     echow '-D, --del [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Will delete domain from listener"
     echow '-H, --help'
@@ -74,14 +76,19 @@ www_domain(){
 add_ls_domain(){
     fst_match_line 'docker.xml</templateFile>' ${LS_HTTPD_CONF}
     NEWNUM=$((FIRST_LINE_NUM+2))
-    sed -i "${NEWNUM}i \ \ \ \ \ \ <member>\n \ \ \ \ \ \ \ <vhName>${DOMAIN}</vhName>\n \ \ \ \ \ \ \ <vhDomain>${DOMAIN},${WWW_DOMAIN}</vhDomain>\n \ \ \ \ \ \ </member>" ${LS_HTTPD_CONF}
+    sed -i "${NEWNUM}i \ \ \ \ \ \ <member>\n \ \ \ \ \ \ \ <vhName>${DOMAIN}</vhName>\n \ \ \ \ \ \ \ <vhDomain>${DOMAIN}</vhDomain>\n \ \ \ \ \ \ </member>" ${LS_HTTPD_CONF}
 }
 
 add_ols_domain(){
     perl -0777 -p -i -e 's/(vhTemplate docker \{[^}]+)\}*(^.*listeners.*$)/\1$2
   member '${DOMAIN}' {
-    vhDomain              '${DOMAIN},${WWW_DOMAIN}'
+    vhDomain              '${DOMAIN}'
   }/gmi' ${OLS_HTTPD_CONF}
+}
+
+update_domain(){
+    MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
+    sed -i "s/${MATCH_LINE}/    vhDomain              ${2}/g" ${OLS_HTTPD_CONF}
 }
 
 add_domain(){
@@ -148,6 +155,9 @@ while [ ! -z "${1}" ]; do
             ;;
         -[aA] | -add | --add) shift
             add_domain ${1}
+            ;;
+        -[aU] | -upd | --upd) shift
+            update_domain ${1} ${2}
             ;;
         -[dD] | -del | --del | --delete) shift
             del_domain ${1}
