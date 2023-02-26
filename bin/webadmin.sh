@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-CONT_NAME='litespeed'
+CONT_NAME='OneLiteSpeed'
 EPACE='        '
 
 echow(){
