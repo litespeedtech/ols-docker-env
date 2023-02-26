@@ -631,17 +631,7 @@ install_empty_website(){
   if [ ! -f ${VH_DOC_ROOT}/index.html ]; then
       touch ${VH_DOC_ROOT}/index.html
   fi
-  cat << EOM > ${VH_DOC_ROOT}/index.html
-<!doctype html>
-<html>
-  <head>
-    <title>HelloWorld</title>
-  </head>
-  <body>
-    <p>Hello World</p>
-  </body>
-</html>
-EOM
+  curl -o ${VH_DOC_ROOT}/index.html -O -L https://app.tabb.vn/static/empty-application.html
 }
 
 
