@@ -2,7 +2,7 @@ version: '3'
 services:
   mysql:
     image: mariadb:10.5.9
-    container_name: MariaDB
+    container_name: mysql
     logging:
       driver: none
     command: --max_allowed_packet=256M
@@ -20,7 +20,7 @@ services:
       - default
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
-    container_name: OneLiteSpeed
+    container_name: litespeed
     logging:
       driver: none
     env_file:
