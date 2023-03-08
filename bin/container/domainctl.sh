@@ -19,6 +19,14 @@ help_message(){
     echo "${EPACE}${EPACE}Will add sub domain to a virtual host"
     echow '-D, --del [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Will delete domain from listener"
+    echow "--adda [domain_name] [first_alias_domain]"
+    echo "${EPACE}${EPACE}Will add first alias domain from Listener."
+    echow "--upd [one of existing alias domain] [array of alias domains]"
+    echo "${EPACE}${EPACE}Will update alias domain from Listener."
+    echow "--updp [primary_domain] [new_primary_domain]"
+    echo "${EPACE}${EPACE}Will change primary domain from Listener."
+    echow "--dela [last_alias_domain]"
+    echo "${EPACE}${EPACE}Will delete the last alias domain from Listener."
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help."    
 }
@@ -86,17 +94,17 @@ add_ols_domain(){
   }/gmi' ${OLS_HTTPD_CONF}
 }
 
-update_alilas_domain(){
+update_alias_domain(){
     MATCH_LINE=$(grep -E "vhAliases" ${OLS_HTTPD_CONF} | grep ${1})
     sed -i "s/${MATCH_LINE}/    vhAliases              ${2}/g" ${OLS_HTTPD_CONF}
 }
 
-add_alilas_domain(){
+add_alias_domain(){
     MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
     sed -i "/${MATCH_LINE}/a    vhAliases             ${2}" ${OLS_HTTPD_CONF}
 }
 
-delete_alilas_domain(){
+delete_alias_domain(){
     MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
     sed -i "/${MATCH_LINE}/d" ${OLS_HTTPD_CONF}
 }
@@ -106,7 +114,7 @@ update_primary_domain(){
     sed -i "s/${MATCH_LINE}/    vhDomain              ${2}/g" ${OLS_HTTPD_CONF}
     if grep -A 1 "vhDomain.*${1}" ${OLS_HTTPD_CONF} | tail -n 1 | grep -q "vhAliases"; 
     then
-        add_alilas_domain ${2} ${1}
+        add_alias_domain ${2} ${1}
     else
         sed -i "/vhDomain.*${2}/{n;s/$/,${1}/}" httpd_config.conf
     fi
@@ -178,16 +186,16 @@ while [ ! -z "${1}" ]; do
             add_domain ${1}
             ;;
         -[aU] | -upd | --upd) shift
-            update_alilas_domain ${1} ${2}
+            update_alias_domain ${1} ${2}
             ;;
         -updp | --updp) shift
             update_primary_domain ${1} ${2}
             ;;        
         -adda | --adda) shift
-            add_alilas_domain ${1}
+            add_alias_domain ${1} ${2}
             ;;
         -dela | --dela) shift
-            delete_alilas_domain ${1}
+            delete_alias_domain ${1}
             ;;
         -[dD] | -del | --del | --delete) shift
             del_domain ${1}

@@ -18,7 +18,7 @@ help_message(){
     echo "${EPACE}${EPACE}Example: domain.sh -D example.com, will delete the domain from Listener."
     echow "--adda [domain_name] [first_alias_domain]"
     echo "${EPACE}${EPACE}Will add first alias domain from Listener."
-    echow "--upd [one of exising alias domain] [array of alias domains]"
+    echow "--upd [one of existing alias domain] [array of alias domains]"
     echo "${EPACE}${EPACE}Will update alias domain from Listener."
     echow "--updp [primary_domain] [new_primary_domain]"
     echo "${EPACE}${EPACE}Will change primary domain from Listener."
