@@ -16,6 +16,14 @@ help_message(){
     echo "${EPACE}${EPACE}Will add sub domain to a virtual host"
     echow "-D, --del [domain_name]"
     echo "${EPACE}${EPACE}Example: domain.sh -D example.com, will delete the domain from Listener."
+    echow "--adda [domain_name] [first_alias_domain]"
+    echo "${EPACE}${EPACE}Will add first alias domain from Listener."
+    echow "--upd [one of exising alias domain] [array of alias domains]"
+    echo "${EPACE}${EPACE}Will update alias domain from Listener."
+    echow "--updp [primary_domain] [new_primary_domain]"
+    echo "${EPACE}${EPACE}Will change primary domain from Listener."
+    echow "--dela [last_alias_domain]"
+    echo "${EPACE}${EPACE}Will delete the last alias domain from Listener."
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit."    
 }
@@ -36,9 +44,27 @@ add_domain(){
     bash bin/webadmin.sh -r
 }
 
-update_domain(){
+add_first_alias_domain(){
+    check_input ${1}
+    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --adda ${1} ${2}"
+    bash bin/webadmin.sh -r
+}
+
+update_alias_domain(){
     check_input ${1}
     docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --upd ${1} ${2}"
+    bash bin/webadmin.sh -r
+}
+
+del_last_alias_domain(){
+    check_input ${1}
+    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --dela ${1}"
+    bash bin/webadmin.sh -r
+}
+
+update_primary_domain(){
+    check_input ${1}
+    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --updp ${1} ${2}"
     bash bin/webadmin.sh -r
 }
 
@@ -57,8 +83,17 @@ while [ ! -z "${1}" ]; do
         -[aA] | -add | --add) shift
             add_domain ${1}
             ;;
-        -[uU] | -upd | --upd) shift
-            update_domain ${1} ${2}
+        -[aU] | -upd | --upd) shift
+            update_alias_domain ${1} ${2}
+            ;;
+        -updp | --updp) shift
+            update_primary_domain ${1} ${2}
+            ;;
+        -adda | --adda) shift
+            add_first_alias_domain ${1} ${2}
+            ;;
+        -dela | --dela) shift
+            del_last_alias_domain ${1}
             ;;
         -[dD] | -del | --del | --delete) shift
             del_domain ${1}

@@ -86,9 +86,30 @@ add_ols_domain(){
   }/gmi' ${OLS_HTTPD_CONF}
 }
 
-update_domain(){
+update_alilas_domain(){
+    MATCH_LINE=$(grep -E "vhAliases" ${OLS_HTTPD_CONF} | grep ${1})
+    sed -i "s/${MATCH_LINE}/    vhAliases              ${2}/g" ${OLS_HTTPD_CONF}
+}
+
+add_alilas_domain(){
+    MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
+    sed -i "/${MATCH_LINE}/a    vhAliases             ${2}" ${OLS_HTTPD_CONF}
+}
+
+delete_alilas_domain(){
+    MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
+    sed -i "/${MATCH_LINE}/d" ${OLS_HTTPD_CONF}
+}
+
+update_primary_domain(){
     MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
     sed -i "s/${MATCH_LINE}/    vhDomain              ${2}/g" ${OLS_HTTPD_CONF}
+    if grep -A 1 "vhDomain.*${1}" ${OLS_HTTPD_CONF} | tail -n 1 | grep -q "vhAliases"; 
+    then
+        add_alilas_domain ${2} ${1}
+    else
+        sed -i "/vhDomain.*${2}/{n;s/$/,${1}/}" httpd_config.conf
+    fi
 }
 
 add_domain(){
@@ -157,7 +178,16 @@ while [ ! -z "${1}" ]; do
             add_domain ${1}
             ;;
         -[aU] | -upd | --upd) shift
-            update_domain ${1} ${2}
+            update_alilas_domain ${1} ${2}
+            ;;
+        -updp | --updp) shift
+            update_primary_domain ${1} ${2}
+            ;;        
+        -adda | --adda) shift
+            add_alilas_domain ${1}
+            ;;
+        -dela | --dela) shift
+            delete_alilas_domain ${1}
             ;;
         -[dD] | -del | --del | --delete) shift
             del_domain ${1}
