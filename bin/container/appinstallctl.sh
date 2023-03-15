@@ -546,10 +546,10 @@ EOM
 <?php
 require_once( WP_CONTENT_DIR.'/../wp-admin/includes/plugin.php' );
 \$path = 'litespeed-cache/litespeed-cache.php' ;
-if (!is_plugin_active( \$path )) {
-    activate_plugin( \$path ) ;
-    rename( __FILE__ . '.bk', __FILE__ );
-}
+#if (!is_plugin_active( \$path )) {
+#    #activate_plugin( \$path ) ;
+#    rename( __FILE__ . '.bk', __FILE__ );
+#}
 END
     elif [ ! -f ${THEME_PATH}/functions.php.bk ]; then 
         cp ${THEME_PATH}/functions.php ${THEME_PATH}/functions.php.bk
@@ -558,10 +558,10 @@ END
 2i
 require_once( WP_CONTENT_DIR.'/../wp-admin/includes/plugin.php' );
 \$path = 'litespeed-cache/litespeed-cache.php' ;
-if (!is_plugin_active( \$path )) {
-    activate_plugin( \$path ) ;
-    rename( __FILE__ . '.bk', __FILE__ );
-}
+#if (!is_plugin_active( \$path )) {
+#    activate_plugin( \$path ) ;
+#    rename( __FILE__ . '.bk', __FILE__ );
+#}
 .
 w
 q
@@ -646,7 +646,7 @@ main(){
 		install_wp_plugin
 		set_htaccess
 		get_theme_name
-#		set_lscache
+		set_lscache
 		change_owner
 		exit 0
 	elif [ "${APP_NAME}" = 'empty' ] || [ "${APP_NAME}" = 'mt' ]; then
