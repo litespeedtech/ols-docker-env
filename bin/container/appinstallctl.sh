@@ -646,7 +646,7 @@ main(){
 		install_wp_plugin
 		set_htaccess
 		get_theme_name
-		set_lscache
+#		set_lscache
 		change_owner
 		exit 0
 	elif [ "${APP_NAME}" = 'empty' ] || [ "${APP_NAME}" = 'mt' ]; then
