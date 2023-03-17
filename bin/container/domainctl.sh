@@ -105,7 +105,7 @@ add_alias_domain(){
 }
 
 delete_alias_domain(){
-    MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
+    MATCH_LINE=$(grep -E "vhAliases" ${OLS_HTTPD_CONF} | grep ${1})
     sed -i "/${MATCH_LINE}/d" ${OLS_HTTPD_CONF}
 }
 
