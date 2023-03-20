@@ -23,7 +23,7 @@ help_message(){
     echo "${EPACE}${EPACE}Will add first alias domain from Listener."
     echow "--upd [one of existing alias domain] [array of alias domains]"
     echo "${EPACE}${EPACE}Will update alias domain from Listener."
-    echow "--updp [primary_domain] [new_primary_domain]"
+    echow "--updp [primary_domain] [new_primary_domain] [array of alias domains]"
     echo "${EPACE}${EPACE}Will change primary domain from Listener."
     echow "--dela [last_alias_domain]"
     echo "${EPACE}${EPACE}Will delete the last alias domain from Listener."
@@ -114,9 +114,10 @@ update_primary_domain(){
     sed -i "s/${MATCH_LINE}/    vhDomain              ${2}/g" ${OLS_HTTPD_CONF}
     if grep -A 1 "vhDomain.*${1}" ${OLS_HTTPD_CONF} | tail -n 1 | grep -q "vhAliases"; 
     then
-        add_alias_domain ${2} ${1}
+        add_alias_domain ${2} ${3}
     else
-        sed -i "/vhDomain.*${2}/{n;s/$/,${1}/}" httpd_config.conf
+        MATCH_LINE=$(grep -E "vhAliases" ${OLS_HTTPD_CONF} | grep ${2})
+        sed -i "s/${MATCH_LINE}/    vhAliases              ${3}/g" ${OLS_HTTPD_CONF}
     fi
 }
 
@@ -189,7 +190,7 @@ while [ ! -z "${1}" ]; do
             update_alias_domain ${1} ${2}
             ;;
         -updp | --updp) shift
-            update_primary_domain ${1} ${2}
+            update_primary_domain ${1} ${2} ${3}
             ;;        
         -adda | --adda) shift
             add_alias_domain ${1} ${2}

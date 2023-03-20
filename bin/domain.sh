@@ -20,7 +20,7 @@ help_message(){
     echo "${EPACE}${EPACE}Will add first alias domain from Listener."
     echow "--upd [one of existing alias domain] [array of alias domains]"
     echo "${EPACE}${EPACE}Will update alias domain from Listener."
-    echow "--updp [primary_domain] [new_primary_domain]"
+    echow "--updp [primary_domain] [new_primary_domain] [array of alias domains]"
     echo "${EPACE}${EPACE}Will change primary domain from Listener."
     echow "--dela [last_alias_domain]"
     echo "${EPACE}${EPACE}Will delete the last alias domain from Listener."
@@ -64,7 +64,7 @@ del_last_alias_domain(){
 
 update_primary_domain(){
     check_input ${1}
-    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --updp ${1} ${2}"
+    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --updp ${1} ${2} ${3}"
     bash bin/webadmin.sh -r
 }
 
@@ -87,10 +87,10 @@ while [ ! -z "${1}" ]; do
             update_alias_domain ${1} ${2}
             ;;
         -updp | --updp) shift
-            update_primary_domain ${1} ${2}
+            update_primary_domain ${1} ${2} ${3}
             ;;
         -adda | --adda) shift
-            add_first_alias_domain ${1} ${2}
+            add_first_alias_domain ${1} ${2} ${3}
             ;;
         -dela | --dela) shift
             del_last_alias_domain ${1}
