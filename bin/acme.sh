@@ -13,6 +13,7 @@ RENEW_ALL=''
 FORCE=''
 REVOKE=''
 REMOVE=''
+ALL_DOMAINS=''
 
 echow(){
     FLAG=${1}
@@ -177,9 +178,9 @@ doc_root_verify(){
 install_cert(){
     echo '[Start] Apply Lets Encrypt Certificate'
     if [ ${TYPE} = 1 ]; then
-        docker compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -w ${DOC_PATH}"
+        docker compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} ${ALL_DOMAINS} -w ${DOC_PATH}"
     elif [ ${TYPE} = 2 ]; then
-        docker compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -d www.${1} -w ${DOC_PATH}"
+        docker compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -d www.${1} ${ALL_DOMAINS} -w ${DOC_PATH}"
     else
         echo 'unknown Type!'
         exit 2
@@ -190,9 +191,9 @@ install_cert(){
 renew_acme(){
     echo '[Start] Renew ACME'
     if [ "${FORCE}" = 'true' ]; then
-        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} --force"
+        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} ${ALL_DOMAINS} --force"
     else
-        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1}"
+        docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --renew --domain ${1} ${ALL_DOMAINS}"
     fi
     echo '[End] Renew ACME'
     lsws_restart
@@ -211,14 +212,14 @@ renew_all_acme(){
 
 revoke(){
     echo '[Start] Revoke a domain'
-    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --revoke --domain ${1}"
+    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --revoke --domain ${1} ${ALL_DOMAINS}"
     echo '[End] Revoke a domain'
     lsws_restart
 }
 
 remove(){
     echo '[Start] Remove a domain'
-    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --remove --domain ${1}"
+    docker compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --remove --domain ${1} ${ALL_DOMAINS}"
     echo '[End] Remove a domain'
     lsws_restart
 }
@@ -256,6 +257,10 @@ while [ ! -z "${1}" ]; do
         -[dD] | -domain | --domain) shift
             check_input "${1}"
             DOMAIN="${1}"
+            ;;
+        -all_domains | --all_domains) shift
+            check_input "${1}"
+            ALL_DOMAINS="${1}"
             ;;
         -[iI] | --install ) 
             INSTALL=true
