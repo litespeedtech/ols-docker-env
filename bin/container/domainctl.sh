@@ -112,12 +112,17 @@ delete_alias_domain(){
 update_primary_domain(){
     MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${1})
     sed -i "s/${MATCH_LINE}/    vhDomain              ${2}/g" ${OLS_HTTPD_CONF}
-    if grep -A 1 "vhDomain.*${1}" ${OLS_HTTPD_CONF} | tail -n 1 | grep -q "vhAliases"; 
-    then
-        add_alias_domain ${2} ${3}
+    existVhAliases=$(grep -A1 "vhDomain.*${2}" ${OLS_HTTPD_CONF})
+    echo $existVhAliases
+    if [[ "$existVhAliases" ==  *"vhAliases"* ]]; then
+      echo "Add more"
+      MATCH_LINE=$(grep -A1 "vhDomain.*${2}" ${OLS_HTTPD_CONF} | grep 'vhAliases')
+      sed -i "s/${MATCH_LINE}/    vhAliases              ${3}/g" ${OLS_HTTPD_CONF}
     else
-        MATCH_LINE=$(grep -E "vhAliases" ${OLS_HTTPD_CONF} | grep ${2})
-        sed -i "s/${MATCH_LINE}/    vhAliases              ${3}/g" ${OLS_HTTPD_CONF}
+      echo "Add first"
+      MATCH_LINE=$(grep -E "vhDomain" ${OLS_HTTPD_CONF} | grep ${2})
+      echo $MATCH_LINE
+      sed -i "/${MATCH_LINE}/a    vhAliases             ${1}" ${OLS_HTTPD_CONF}
     fi
 }
 
