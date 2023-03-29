@@ -48,6 +48,23 @@ services:
     restart: always
     networks:
       - default
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+    restart: always
+    networks:
+      - default
+  redis:
+    build: ./redis
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - default
 networks:
   default:
     driver: bridge
