@@ -43,17 +43,24 @@ services:
       TZ: ${TimeZone}
     networks:
       - default
-#  phpmyadmin:
-#    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
-#    container_name: phpmyadmin
-#    ports:
-#      - 8080:8080
-#      - 8443:8443
-#    environment:
-#        DATABASE_HOST: mysql
-#    restart: always
-#    networks:
-#      - default
+
+  redis:
+    image: docker.io/bitnami/redis:7.0
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - 'redis:/bitnami/redis/data'
+    networks:
+      - default
+
+volumes:
+  redis:
+    driver: local
+
 networks:
   default:
     driver: bridge
