@@ -48,9 +48,10 @@ services:
     image: docker.io/bitnami/redis:7.0
     container_name: lomp_redis
     environment:
+      - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    ports:
-      - "6379:6379"
+#    ports:
+#      - "6379:6379"
     restart: always
     volumes:
       - 'redis:/bitnami/redis/data'
