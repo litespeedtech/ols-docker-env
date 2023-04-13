@@ -39,6 +39,8 @@ The docker image installs the following packages on your system:
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
 |phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/bitnami/phpmyadmin/)|
+|Redis|[from build folder](https://hub.docker.com/_/redis)|
+|Mailhog|[Latest from dockerhub](https://hub.docker.com/r/mailhog/mailhog/)|
 
 ## Data Structure
 Cloned project 
