@@ -56,7 +56,8 @@ services:
     volumes:
       - 'redis:/bitnami/redis/data'
     networks:
-      - default
+      default:
+        ipv4_address: 10.5.0.5
 
 volumes:
   redis:
@@ -65,3 +66,7 @@ volumes:
 networks:
   default:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
