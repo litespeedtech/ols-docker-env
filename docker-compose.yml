@@ -20,7 +20,7 @@ services:
     networks:
       - default
   litespeed:
-    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    image: tabbsh/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
     container_name: litespeed
     logging:
       driver: none
