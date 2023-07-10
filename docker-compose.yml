@@ -39,12 +39,29 @@ services:
     networks:
       - default
   phpmyadmin:
-    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
+    image: bitnami/phpmyadmin:latest
     ports:
       - 8080:8080
       - 8443:8443
     environment:
         DATABASE_HOST: mysql
+    restart: always
+    networks:
+      - default
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+    restart: always
+    networks:
+      - default
+  redis:
+    build: ./redis
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - 6379:6379
     restart: always
     networks:
       - default
