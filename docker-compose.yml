@@ -60,29 +60,6 @@ services:
       default:
         ipv4_address: 10.5.0.5
 
-  adminer:
-    image: adminer:latest
-    container_name: adminer
-    ports:
-      - 32103:8080
-    environment:
-      DATABASE_HOST: mysql
-      ADMINER_DEFAULT_SERVER: mysql
-    restart: always
-    networks:
-      - default
-
-  filestash:
-    container_name: filestash
-    image: machines/filestash
-    restart: always
-    ports:
-      - 32104:8334
-    environment:
-      ADMIN_PASSWORD: ${FILESTASH_PASSWORD}
-    networks:
-      - default
-
 volumes:
   redis:
     driver: local
