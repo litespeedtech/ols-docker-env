@@ -31,9 +31,11 @@ services:
 #      - ./lsws/lsphp74:/usr/local/lsws/lsphp74
       - ./lsws/admin-conf:/usr/local/lsws/admin/conf
       - ./bin/container:/usr/local/bin
-      - /var/www/applications:/var/www/vhosts/
+#      - /var/www/applications:/var/www/vhosts/
+      - ./sites:/var/www/vhosts/
       - ./acme:/root/.acme.sh/
       - ./logs:/usr/local/lsws/logs/
+      - ./bin/dev:/home/dev
     ports:
       - 80:80
       - 443:443
