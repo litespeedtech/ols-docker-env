@@ -33,20 +33,20 @@ check_input(){
 }
 
 lsws_restart(){
-    docker-compose exec -T ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+    docker compose exec -T ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 }
 
 apply_serial(){
-    docker-compose exec ${CONT_NAME} su -c "serialctl.sh --serial ${1}"
+    docker compose exec ${CONT_NAME} su -c "serialctl.sh --serial ${1}"
     lsws_restart
 }
 
 mod_secure(){
     if [ "${1}" = 'enable' ] || [ "${1}" = 'Enable' ]; then
-        docker-compose exec ${CONT_NAME} su -s /bin/bash root -c "owaspctl.sh --enable"
+        docker compose exec ${CONT_NAME} su -s /bin/bash root -c "owaspctl.sh --enable"
         lsws_restart
     elif [ "${1}" = 'disable' ] || [ "${1}" = 'Disable' ]; then
-        docker-compose exec ${CONT_NAME} su -s /bin/bash root -c "owaspctl.sh --disable"
+        docker compose exec ${CONT_NAME} su -s /bin/bash root -c "owaspctl.sh --disable"
         lsws_restart
     else
         help_message
@@ -55,13 +55,13 @@ mod_secure(){
 
 ls_upgrade(){
     echo 'Upgrade web server to latest stable version.'
-    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/admin/misc/lsup.sh 2>/dev/null'
+    docker compose exec ${CONT_NAME} su -c '/usr/local/lsws/admin/misc/lsup.sh 2>/dev/null'
 }
 
 set_web_admin(){
     echo 'Update web admin password.'
     local LSADPATH='/usr/local/lsws/admin'
-    docker-compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
+    docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c \
         'if [ -e /usr/local/lsws/admin/fcgi-bin/admin_php ]; then \
         echo "admin:$('${LSADPATH}'/fcgi-bin/admin_php -q '${LSADPATH}'/misc/htpasswd.php '${1}')" > '${LSADPATH}'/conf/htpasswd; \
         else echo "admin:$('${LSADPATH}'/fcgi-bin/admin_php5 -q '${LSADPATH}'/misc/htpasswd.php '${1}')" > '${LSADPATH}'/conf/htpasswd; \

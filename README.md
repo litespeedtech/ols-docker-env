@@ -19,9 +19,9 @@ Clone this repository or copy the files from this repository into a new folder:
 ```
 git clone https://github.com/litespeedtech/ols-docker-env.git
 ```
-Open a terminal, `cd` to the folder in which `docker-compose.yml` is saved, and run:
+Open a terminal, `cd` to the folder in which `docker compose.yml` is saved, and run:
 ```
-docker-compose up
+docker compose up
 ```
 
 Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
@@ -79,21 +79,21 @@ Cloned project
 ### Starting a Container
 Start the container with the `up` or `start` methods:
 ```
-docker-compose up
+docker compose up
 ```
 You can run with daemon mode, like so:
 ```
-docker-compose up -d
+docker compose up -d
 ```
 The container is now built and running. 
 ### Stopping a Container
 ```
-docker-compose stop
+docker compose stop
 ```
 ### Removing Containers
 To stop and remove all containers, use the `down` command:
 ```
-docker-compose down
+docker compose down
 ```
 ### Setting the WebAdmin Password
 We strongly recommend you set your personal password right away.
@@ -186,7 +186,7 @@ RUN apt-get update && apt-get install lsphp80-pspell -y
 ```
 4. Build and start it with command:
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Support & Feedback

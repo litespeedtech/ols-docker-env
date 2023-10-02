@@ -5,6 +5,7 @@ RULE_FILE='modsec_includes.conf'
 LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
 OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
 EPACE='        '
+OWASP_V='3.3.4'
 
 echow(){
     FLAG=${1}
@@ -137,18 +138,21 @@ disable_modsec(){
     fi
 }
 
-install_git(){
-    if [ ! -f /usr/bin/git ]; then
-        echo 'Install git'
+install_unzip(){
+    if [ ! -f /usr/bin/unzip ]; then
+        echo 'Install Unzip'
         apt update >/dev/null 2>&1
-        apt-get install git -y >/dev/null 2>&1
+        apt-get install unzip -y >/dev/null 2>&1
     fi
 }
 
 install_owasp(){
     cd ${OWASP_DIR}
     echo 'Download OWASP rules'
-    git clone https://github.com/SpiderLabs/owasp-modsecurity-crs.git >/dev/null 2>&1
+    wget -q https://github.com/coreruleset/coreruleset/archive/refs/tags/v${OWASP_V}.zip
+    unzip -qq v${OWASP_V}.zip
+    rm -f v${OWASP_V}.zip
+    mv coreruleset-* owasp-modsecurity-crs
 }
 
 configure_owasp(){
@@ -205,7 +209,7 @@ include owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf"
 
 main_owasp(){
     mk_owasp_dir
-    install_git
+    install_unzip
     install_owasp
     configure_owasp
     check_lsv
