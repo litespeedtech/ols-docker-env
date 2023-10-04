@@ -20,7 +20,7 @@ services:
     networks:
       - default
   litespeed:
-    image: tabbsh/lomp:1.8.0-test
+    image: tabbsh/lomp:1.8.1-test
     container_name: litespeed
     logging:
       driver: none
@@ -38,6 +38,7 @@ services:
       - ./bin/dev:/home/dev
     ports:
       - 80:80
+      - 7201:7201
       - 443:443
       - 443:443/udp
       - 7080:7080
