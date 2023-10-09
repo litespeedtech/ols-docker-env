@@ -1,0 +1,76 @@
+configfile $SERVER_ROOT/conf/vhosts/$VH_NAME/vhconf.conf
+setuidmode 2
+enablescript 1
+restrained 1
+allowsymbollink 1
+chrootmode 0
+vhroot $SERVER_ROOT/$VH_NAME/
+
+virtualhostconfig  {
+    docroot $VH_ROOT/public/
+    enablegzip 1
+
+    rewrite  {
+        enable 0
+        loglevel 0
+    }
+
+    accesslog $SERVER_ROOT/logs/$VH_NAME.access.log {
+        logheaders 3
+        compressarchive 0
+        useserver 0
+        keepdays 30
+        rollingsize 500M
+    }
+
+    hotlinkctrl  {
+        suffixes gif, jpeg, jpg
+        allowdirectaccess 1
+        onlyself 1
+        enablehotlinkctrl 0
+    }
+
+    accesscontrol  {
+        allow *
+    }
+
+    expires  {
+        enableexpires 1
+    }
+
+    awstats  {
+        awstatsuri /awstats/
+        sitedomain localhost
+        sitealiases 127.0.0.1 localhost
+        updatemode 0
+        updateinterval 86400
+        updateoffset 0
+        securedconn 0
+        workingdir $VH_ROOT/awstats
+    }
+
+    errorlog  {
+        useserver 1
+    }
+
+    context / {
+        railsenv 1
+        maxconns 5
+        location $VH_ROOT/
+        type rails
+        accesscontrol 
+        adddefaultcharset off
+
+        rewrite  {
+            rules rewritefile .htaccess
+            unknownkeywords rewritefile .htaccess
+        }
+    }
+
+    index  {
+        autoindexuri /_autoindex/default.php
+        useserver 0
+        autoindex 0
+        indexfiles index.html
+    }
+}

@@ -1,0 +1,53 @@
+head	1.1;
+access;
+symbols;
+locks
+	root:1.1; strict;
+comment	@# @;
+
+
+1.1
+date	2023.09.29.09.43.16;	author root;	state Exp;
+branches;
+next	;
+
+
+desc
+@/usr/local/lsws/admin/conf/admin_config.conf0
+@
+
+
+1.1
+log
+@Update
+@
+text
+@enableCoreDump          1
+sessionTimeout          3600
+
+errorlog $SERVER_ROOT/admin/logs/error.log {
+  useServer             0
+  logLevel              INFO
+  rollingSize           10M
+}
+
+accessLog $SERVER_ROOT/admin/logs/access.log {
+  useServer             0
+  rollingSize           10M
+  keepDays              90
+  logReferer            1
+  logUserAgent          1
+}
+
+accessControl {
+  allow                 ALL
+}
+
+listener adminListener{
+  address               *:7080
+  secure                1
+  keyFile               $SERVER_ROOT/admin/conf/webadmin.key
+  certFile              $SERVER_ROOT/admin/conf/webadmin.crt
+  clientVerify          0
+}
+@

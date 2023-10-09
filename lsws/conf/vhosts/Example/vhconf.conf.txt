@@ -1,0 +1,117 @@
+docroot $VH_ROOT/html/
+enablegzip 1
+
+context / {
+    allowbrowse 1
+    location $DOC_ROOT/
+
+    rewrite  {
+        rules rewritefile .htaccess
+        unknownkeywords rewritefile .htaccess
+    }
+}
+
+context /docs/ {
+    allowbrowse 1
+    location $SERVER_ROOT/docs/
+}
+
+context /protected/ {
+    required user test
+    authname Protected
+    allowbrowse 1
+    location protected/
+    realm SampleProtectedArea
+
+    accesscontrol  {
+        deny 
+        allow *
+    }
+}
+
+context /blocked/ {
+    allowbrowse 0
+}
+
+context /cgi-bin/ {
+    allowbrowse 1
+    location $VH_ROOT/cgi-bin/
+    type cgi
+}
+
+expires  {
+    enableexpires 1
+}
+
+index  {
+    autoindexuri /_autoindex/default.php
+    indexfiles index.html
+    autoindex 0
+    useserver 0
+}
+
+errorpage 404 {
+    url /error404.html
+}
+
+errorlog $VH_ROOT/logs/error.log {
+    loglevel DEBUG
+    rollingsize 10M
+    useserver 1
+}
+
+accesslog $VH_ROOT/logs/access.log {
+    compressarchive 0
+    logreferer 1
+    keepdays 30
+    rollingsize 10M
+    loguseragent 1
+    useserver 0
+}
+
+awstats  {
+    updateinterval 86400
+    workingdir $VH_ROOT/awstats
+    updateoffset 0
+    sitedomain localhost
+    sitealiases 127.0.0.1 localhost
+    updatemode 0
+    awstatsuri /awstats/
+}
+
+rewrite  {
+    enable 0
+    loglevel 0
+}
+
+hotlinkctrl  {
+    suffixes gif,  jpeg,  jpg
+    allowedhosts 
+    allowdirectaccess 1
+    enablehotlinkctrl 0
+    onlyself 1
+}
+
+accesscontrol  {
+    deny 
+    allow *
+}
+
+realm SampleProtectedArea {
+
+    userdb  {
+        cachetimeout 60
+        maxcachesize 200
+        location conf/vhosts/$VH_NAME/htpasswd
+    }
+
+    groupdb  {
+        cachetimeout 60
+        maxcachesize 200
+        location conf/vhosts/$VH_NAME/htgroup
+    }
+}
+
+general  {
+    enablecontextac 0
+}
