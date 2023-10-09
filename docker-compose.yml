@@ -27,7 +27,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./lsws/conf:/usr/local/lsws/conf
+#      - ./lsws/conf:/usr/local/lsws/conf
 #      - ./lsws/lsphp74:/usr/local/lsws/lsphp74
       - ./lsws/admin-conf:/usr/local/lsws/admin/conf
       - ./bin/container:/usr/local/bin
