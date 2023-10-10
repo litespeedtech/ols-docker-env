@@ -27,11 +27,12 @@ services:
     env_file:
       - .env
     volumes:
-      - ./lsws/conf:/usr/local/lsws/conf
+#      - ./lsws/conf:/usr/local/lsws/conf
 #      - ./lsws/lsphp74:/usr/local/lsws/lsphp74
       - ./lsws/admin-conf:/usr/local/lsws/admin/conf
       - ./bin/container:/usr/local/bin
-      - /var/www/applications:/var/www/vhosts/
+#      - /var/www/applications:/var/www/vhosts/
+      - ./sites:/var/www/vhosts/
       - ./acme:/root/.acme.sh/
       - ./logs:/usr/local/lsws/logs/
       - ./bin/dev:/home/dev
