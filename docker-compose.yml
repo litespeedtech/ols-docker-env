@@ -20,7 +20,7 @@ services:
     networks:
       - default
   litespeed:
-    image: tabbsh/lomp-1.8.1-test
+    image: tabbsh/lomp:1.7.2-stable
     container_name: litespeed
     logging:
       driver: none
