@@ -4,7 +4,7 @@ services:
     image: mariadb:10.5.9
     logging:
       driver: none
-    command: [--max-allowed-packet=512M]
+    command: ["--max-allowed-packet=512M"]
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
     environment:
