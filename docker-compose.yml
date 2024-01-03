@@ -4,7 +4,7 @@ services:
     image: mariadb:10.5.9
     logging:
       driver: none
-    command: --max_allowed_packet=256M
+    command: ["--max-allowed-packet=512M"]
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
     environment:
@@ -45,6 +45,19 @@ services:
       - 8443:8443
     environment:
         DATABASE_HOST: mysql
+    restart: always
+    networks:
+      - default
+  redis:
+    image: "redis:alpine"
+    logging:
+      driver: none
+    # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
+    volumes:
+      - ./redis/data:/var/lib/redis
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
     restart: always
     networks:
       - default
