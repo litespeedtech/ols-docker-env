@@ -32,13 +32,14 @@ The docker image installs the following packages on your system:
 |Component|Version|
 | :-------------: | :-------------: |
 |Linux|Ubuntu 22.04|
-|OpenLiteSpeed|[Latest version](https://openlitespeed.org/downloads/)|
+|OpenLiteSpeed|[Latest version](https://hub.docker.com/r/litespeedtech/openlitespeed)|
 |MariaDB|[Stable version: 10.5](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
 |phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/bitnami/phpmyadmin/)|
+|Redis|[Latest from dockerhub](https://hub.docker.com/_/redis/)|
 
 ## Data Structure
 Cloned project 
@@ -128,6 +129,10 @@ To preconfigure the `wp-config` file, run the `database.sh` script for your doma
 ```
 ./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com
 ```
+
+### Connecting to Redis 
+Go to [WordPress > LSCache Plugin > Cache > Object](https://docs.litespeedtech.com/lscache/lscwp/cache/#object-tab), select **Redis** method and input `redis` to the Host field. 
+
 ### Install ACME 
 We need to run the ACME installation command the **first time only**. 
 With email notification:

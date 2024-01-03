@@ -20,13 +20,13 @@ help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
     echow '-D, --domain [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Example: database.sh -D example.com"
-    echo "${EPACE}${EPACE}Will auto generate Database/username/password for the domain"
+    echo "${EPACE}${EPACE}Will auto-generate Database/username/password for the domain"
     echow '-D, --domain [DOMAIN_NAME] -U, --user [xxx] -P, --password [xxx] -DB, --database [xxx]'
     echo "${EPACE}${EPACE}Example: database.sh -D example.com -U USERNAME -P PASSWORD -DB DATABASENAME"
     echo "${EPACE}${EPACE}Will create Database/username/password by given"
-    echow '-r, --delete [DOMAIN_NAME] -DB, --database [xxx] -U, --user [xxx]'
-    echo "${EPACE}${EPACE}Example: database.sh -r example.com -DB DATABASENAME -U USERNAME"
-    echo "${EPACE}${EPACE}Will delete database (require) and username (optional) by given"
+    echow '-R, --delete -DB, --database [xxx] -U, --user [xxx]'
+    echo "${EPACE}${EPACE}Example: database.sh -r -DB DATABASENAME -U USERNAME"
+    echo "${EPACE}${EPACE}Will delete the database (require) and username (optional) by given"
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit."
     exit 0    
@@ -181,8 +181,7 @@ while [ ! -z "${1}" ]; do
         -db | -DB | -database| --database) shift
             SQL_DB="${1}"
             ;;
-        -[rR] | -del | --del | --delete) shift
-            DOMAIN="${1}"
+        -[rR] | -del | --del | --delete)
             METHOD=1
             ;;
         *) 
