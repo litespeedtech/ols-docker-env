@@ -17,8 +17,6 @@ services:
       - default
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
-    logging:
-      driver: none
     env_file:
       - .env
     volumes:
