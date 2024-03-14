@@ -16,7 +16,7 @@ services:
     networks:
       - default
   litespeed:
-    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    image: ghcr.io/ndigitals/openlitespeed:1.7.19-lsphp83-node20
     container_name: litespeed
     env_file:
       - .env
@@ -38,12 +38,12 @@ services:
     networks:
       - default
   phpmyadmin:
-    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
+    image: arm64v8/phpmyadmin:latest
     ports:
       - 8080:8080
       - 8443:8443
     environment:
-        DATABASE_HOST: mysql
+      DATABASE_HOST: mysql
     restart: always
     networks:
       - default
