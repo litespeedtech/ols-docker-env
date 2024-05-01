@@ -5,7 +5,7 @@ RULE_FILE='modsec_includes.conf'
 LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
 OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
 EPACE='        '
-OWASP_V='3.3.4'
+OWASP_V='4.2.0'
 
 echow(){
     FLAG=${1}
