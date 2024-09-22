@@ -11,7 +11,7 @@ Install a lightweight WordPress container with OpenLiteSpeed Edge or Stable vers
 2. [Install Docker Compose](https://docs.docker.com/compose/)
 
 ## Configuration
-Edit the `.env` file to update the demo site domain, default MySQL user, and password.
+Edit the `.env` file to update the demo site domain, default MySQL user, and password and optionally set hostname for existing MySQL server.
 Feel free to check [Docker hub Tag page](https://hub.docker.com/repository/docker/litespeedtech/openlitespeed/tags) if you want to update default openlitespeed and php versions. 
 
 ## Installation
@@ -19,10 +19,19 @@ Clone this repository or copy the files from this repository into a new folder:
 ```
 git clone https://github.com/litespeedtech/ols-docker-env.git
 ```
+
 Open a terminal, `cd` to the folder in which `docker compose.yml` is saved, and run:
+# To use an existing MySQL server
 ```
-docker compose up
+docker compose up -d
 ```
+Note: Be sure to uncomment, and set MYSQL_HOST in the .env file
+
+# To use the included MySQL Server (as well as phpMyAdmin)
+```
+docker compose --profile database up -d
+```
+Note: Be sure MYSQL_HOST is commented out in the .env file
 
 Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
 

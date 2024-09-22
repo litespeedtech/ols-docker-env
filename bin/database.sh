@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 source .env
-
+echo
 DOMAIN=''
-SQL_HOST=''
 SQL_DB=''
 SQL_USER=''
 SQL_PASS=''
@@ -22,15 +21,15 @@ help_message(){
     echow '-D, --domain [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Example: database.sh -D example.com"
     echo "${EPACE}${EPACE}Will auto-generate Database/username/password for the domain"
-    echow '-D, --domain [DOMAIN_NAME] -H, --dbhost [xxx] -U, --user [xxx] -P, --password [xxx] -DB, --database [xxx]'
+    echow '-D, --domain [DOMAIN_NAME] -U, --user [xxx] -P, --password [xxx] -DB, --database [xxx]'
     echo "${EPACE}${EPACE}Example: database.sh -D example.com -H DBHOST -U USERNAME -P PASSWORD -DB DATABASENAME"
     echo "${EPACE}${EPACE}Will create Database/username/password by given"
     echow '-R, --delete -DB, --database [xxx] -U, --user [xxx]'
     echo "${EPACE}${EPACE}Example: database.sh -r -DB DATABASENAME -U USERNAME"
     echo "${EPACE}${EPACE}Will delete the database (require) and username (optional) by given"
-    echow '-H, --help'
+    echow '-?, --help'
     echo "${EPACE}${EPACE}Display help and exit."
-    exit 0    
+    exit 0
 }
 
 check_input(){
@@ -41,14 +40,12 @@ check_input(){
 }
 
 specify_name(){
-    check_input ${SQL_HOST}
     check_input ${SQL_USER}
     check_input ${SQL_PASS}
     check_input ${SQL_DB}
 }
 
 auto_name(){
-    SQL_HOST='mysql'
     SQL_DB="${TRANSNAME}"
     SQL_USER="${TRANSNAME}"
     SQL_PASS="'${RANDOM_PASS}'"
@@ -64,59 +61,59 @@ trans_name(){
 
 display_credential(){
     if [ ${SET_OK} = 0 ]; then
-        echo "Host: ${SQL_HOST}"
+        echo "Host: ${MYSQL_HOST}"
         echo "Database: ${SQL_DB}"
         echo "Username: ${SQL_USER}"
         echo "Password: $(echo ${SQL_PASS} | tr -d "'")"
-    fi    
+    fi
 }
 
 store_credential(){
     if [ -d "./sites/${1}" ]; then
-        if [ -f ./sites/${1}/.db_pass ]; then 
+        if [ -f ./sites/${1}/.db_pass ]; then
             mv ./sites/${1}/.db_pass ./sites/${1}/.db_pass.bk
         fi
         cat > "./sites/${1}/.db_pass" << EOT
-"Host":"${SQL_HOST}"
+"Host":"${MYSQL_HOST}"
 "Database":"${SQL_DB}"
 "Username":"${SQL_USER}"
 "Password":"$(echo ${SQL_PASS} | tr -d "'")"
 EOT
     else
         echo "./sites/${1} not found, abort credential store!"
-    fi    
+    fi
 }
 
 check_db_access(){
-    if [ "${SQL_HOST}" == '' ]; then
+    if [[ -z $MYSQL_HOST ]]; then
         docker compose exec -T mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     else
-        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status' >/dev/null 2>&1
+        mysql -h${MYSQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status' >/dev/null 2>&1
     fi
 
     if [ ${?} != 0 ]; then
         echo '[X] DB access failed, please check!'
         exit 1
-    fi    
+    fi
 }
 
 check_db_exist(){
-    if [ "${SQL_HOST}" == '' ]; then
+    if [[ -z $MYSQL_HOST ]]; then
         docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
     else
-        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e "use ${1}" >/dev/null 2>&1
+        mysql -h${MYSQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e "use ${1}" >/dev/null 2>&1
     fi
     if [ ${?} = 0 ]; then
         echo "Database ${1} already exist, skip DB creation!"
-        exit 0    
-    fi      
+        exit 0
+    fi
 }
 
 check_db_not_exist(){
-    if [ "${SQL_HOST}" == '' ]; then
+    if [[ -z $MYSQL_HOST ]]; then
         docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
     else
-        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e "use ${1}" >/dev/null 2>&1
+        mysql -h${MYSQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e "use ${1}" >/dev/null 2>&1
     fi
     if [ ${?} != 0 ]; then
         echo "Database ${1} doesn't exist, skip DB deletion!"
@@ -124,44 +121,44 @@ check_db_not_exist(){
     fi
 }
 
-db_setup(){  
-    if [ "${SQL_DB}" == '' ]; then
+db_setup(){
+    if [[ -z $SQL_DB ]]; then
         echo "Database parameter is required!"
         exit 0
     fi
-    if [ "${SQL_HOST}" == '' ]; then
+    if [[ -z $MYSQL_HOST ]]; then
         docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
             -e "CREATE DATABASE '${SQL_DB}';" \
             -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
             -e "FLUSH PRIVILEGES;"'
     else
-        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} \
-            -e "CREATE DATABASE '${SQL_DB}';" \
-            -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
-            -e "FLUSH PRIVILEGES;"
+        mysql -h${MYSQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} \
+            -e "CREATE DATABASE \`${SQL_DB}\`;" \
+            -e "GRANT ALL PRIVILEGES ON \`${SQL_DB}\`.* TO \`${SQL_USER}\`@${ANY} IDENTIFIED BY ${SQL_PASS};" \
+            -e "FLUSH PRIVILEGES;" 2>/dev/null
     fi
     SET_OK=${?}
 }
 
 db_delete(){
-    if [ "${SQL_DB}" == '' ]; then
+    if [[ -z $SQL_DB ]]; then
         echo "Database parameter is required!"
         exit 0
     fi
-    if [ "${SQL_USER}" == '' ]; then
+    if [[ -z $SQL_USER ]]; then
         SQL_USER="${SQL_DB}"
     fi
     check_db_not_exist ${SQL_DB}
-    if [ "${SQL_HOST}" == '' ]; then
+    if [[ -z $MYSQL_HOST ]]; then
         docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
             -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
             -e "DROP USER IF EXISTS '${SQL_USER}'@'${ANY}';" \
             -e "FLUSH PRIVILEGES;"'
     else
-        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} \
-            -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
-            -e "DROP USER IF EXISTS '${SQL_USER}'@'${ANY}';" \
-            -e "FLUSH PRIVILEGES;"
+        mysql -h${MYSQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} \
+            -e "DROP DATABASE IF EXISTS \`${SQL_DB}\`;" \
+            -e "DROP USER IF EXISTS \`${SQL_USER}\`@${ANY};" \
+            -e "FLUSH PRIVILEGES;" 2>/dev/null
     fi
     echo "Database ${SQL_DB} and User ${SQL_USER} are deleted!"
 }
@@ -175,6 +172,7 @@ auto_setup_main(){
     check_db_access
     db_setup
     display_credential
+    echo
     store_credential ${DOMAIN}
 }
 
@@ -184,6 +182,7 @@ specify_setup_main(){
     check_db_access
     db_setup
     display_credential
+    echo
     store_credential ${DOMAIN}
 }
 
@@ -192,7 +191,7 @@ main(){
         db_delete
         exit 0
     fi
-    if [ "${SQL_USER}" != '' ] && [ "${SQL_PASS}" != '' ] && [ "${SQL_DB}" != '' ]; then
+    if [[ -n $SQL_USER ]] && [[ -n $SQL_PASS ]] && [[ -n $SQL_DB ]]; then
         specify_setup_main
     else
         auto_setup_main
@@ -200,9 +199,10 @@ main(){
 }
 
 check_input ${1}
+
 while [ ! -z "${1}" ]; do
     case ${1} in
-        -[hH] | -help | --help)
+        -[h] | -help | --help)
             help_message
             ;;
         -[dD] | -domain| --domain) shift
@@ -211,22 +211,20 @@ while [ ! -z "${1}" ]; do
         -[uU] | -user | --user) shift
             SQL_USER="${1}"
             ;;
-        -[hH] | -dbhost | --dbhost) shift
-            SQL_HOST="${1}"
-            ;;
         -[pP] | -password| --password) shift
             SQL_PASS="'${1}'"
-            ;;            
+            ;;
         -db | -DB | -database| --database) shift
             SQL_DB="${1}"
             ;;
         -[rR] | -del | --del | --delete)
             METHOD=1
             ;;
-        *) 
+        *)
             help_message
-            ;;              
+            ;;
     esac
     shift
 done
+
 main

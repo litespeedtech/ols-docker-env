@@ -99,7 +99,7 @@ check_sql_native(){
 	else
 		get_db_pass ${DOMAIN}
 	fi
-	if [ "${DB_HOST}" == '' ] then
+	if [ "${DB_HOST}" == '' ]; then
 		local COUNTER=0
 		local LIMIT_NUM=100
 		until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
