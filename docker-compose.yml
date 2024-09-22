@@ -2,6 +2,8 @@ version: '3'
 services:
   mysql:
     image: mariadb:10.5.9
+    profiles:
+      - database
     logging:
       driver: none
     command: ["--max-allowed-packet=512M"]
@@ -39,6 +41,8 @@ services:
       - default
   phpmyadmin:
     image: bitnami/phpmyadmin:5.2.0-debian-11-r43
+    profiles:
+      - database    
     ports:
       - 8080:8080
       - 8443:8443

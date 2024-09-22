@@ -2,6 +2,7 @@
 source .env
 
 DOMAIN=''
+SQL_HOST=''
 SQL_DB=''
 SQL_USER=''
 SQL_PASS=''
@@ -21,8 +22,8 @@ help_message(){
     echow '-D, --domain [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Example: database.sh -D example.com"
     echo "${EPACE}${EPACE}Will auto-generate Database/username/password for the domain"
-    echow '-D, --domain [DOMAIN_NAME] -U, --user [xxx] -P, --password [xxx] -DB, --database [xxx]'
-    echo "${EPACE}${EPACE}Example: database.sh -D example.com -U USERNAME -P PASSWORD -DB DATABASENAME"
+    echow '-D, --domain [DOMAIN_NAME] -H, --dbhost [xxx] -U, --user [xxx] -P, --password [xxx] -DB, --database [xxx]'
+    echo "${EPACE}${EPACE}Example: database.sh -D example.com -H DBHOST -U USERNAME -P PASSWORD -DB DATABASENAME"
     echo "${EPACE}${EPACE}Will create Database/username/password by given"
     echow '-R, --delete -DB, --database [xxx] -U, --user [xxx]'
     echo "${EPACE}${EPACE}Example: database.sh -r -DB DATABASENAME -U USERNAME"
@@ -40,12 +41,14 @@ check_input(){
 }
 
 specify_name(){
+    check_input ${SQL_HOST}
     check_input ${SQL_USER}
     check_input ${SQL_PASS}
     check_input ${SQL_DB}
 }
 
 auto_name(){
+    SQL_HOST='mysql'
     SQL_DB="${TRANSNAME}"
     SQL_USER="${TRANSNAME}"
     SQL_PASS="'${RANDOM_PASS}'"
@@ -61,6 +64,7 @@ trans_name(){
 
 display_credential(){
     if [ ${SET_OK} = 0 ]; then
+        echo "Host: ${SQL_HOST}"
         echo "Database: ${SQL_DB}"
         echo "Username: ${SQL_USER}"
         echo "Password: $(echo ${SQL_PASS} | tr -d "'")"
@@ -73,6 +77,7 @@ store_credential(){
             mv ./sites/${1}/.db_pass ./sites/${1}/.db_pass.bk
         fi
         cat > "./sites/${1}/.db_pass" << EOT
+"Host":"${SQL_HOST}"
 "Database":"${SQL_DB}"
 "Username":"${SQL_USER}"
 "Password":"$(echo ${SQL_PASS} | tr -d "'")"
@@ -83,7 +88,12 @@ EOT
 }
 
 check_db_access(){
-    docker compose exec -T mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
+    if [ "${SQL_HOST}" == '' ]; then
+        docker compose exec -T mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
+    else
+        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status' >/dev/null 2>&1
+    fi
+
     if [ ${?} != 0 ]; then
         echo '[X] DB access failed, please check!'
         exit 1
@@ -91,7 +101,11 @@ check_db_access(){
 }
 
 check_db_exist(){
-    docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
+    if [ "${SQL_HOST}" == '' ]; then
+        docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
+    else
+        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e "use ${1}" >/dev/null 2>&1
+    fi
     if [ ${?} = 0 ]; then
         echo "Database ${1} already exist, skip DB creation!"
         exit 0    
@@ -99,7 +113,11 @@ check_db_exist(){
 }
 
 check_db_not_exist(){
-    docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
+    if [ "${SQL_HOST}" == '' ]; then
+        docker compose exec -T mysql su -c "test -e /var/lib/mysql/${1}"
+    else
+        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} -e "use ${1}" >/dev/null 2>&1
+    fi
     if [ ${?} != 0 ]; then
         echo "Database ${1} doesn't exist, skip DB deletion!"
         exit 0
@@ -107,10 +125,21 @@ check_db_not_exist(){
 }
 
 db_setup(){  
-    docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
-    -e "CREATE DATABASE '${SQL_DB}';" \
-    -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
-    -e "FLUSH PRIVILEGES;"'
+    if [ "${SQL_DB}" == '' ]; then
+        echo "Database parameter is required!"
+        exit 0
+    fi
+    if [ "${SQL_HOST}" == '' ]; then
+        docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+            -e "CREATE DATABASE '${SQL_DB}';" \
+            -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
+            -e "FLUSH PRIVILEGES;"'
+    else
+        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} \
+            -e "CREATE DATABASE '${SQL_DB}';" \
+            -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
+            -e "FLUSH PRIVILEGES;"
+    fi
     SET_OK=${?}
 }
 
@@ -123,10 +152,17 @@ db_delete(){
         SQL_USER="${SQL_DB}"
     fi
     check_db_not_exist ${SQL_DB}
-    docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
-        -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
-        -e "DROP USER IF EXISTS '${SQL_USER}'@'${ANY}';" \
-        -e "FLUSH PRIVILEGES;"'
+    if [ "${SQL_HOST}" == '' ]; then
+        docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+            -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
+            -e "DROP USER IF EXISTS '${SQL_USER}'@'${ANY}';" \
+            -e "FLUSH PRIVILEGES;"'
+    else
+        mysql -h${SQL_HOST} -uroot -p${MYSQL_ROOT_PASSWORD} \
+            -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
+            -e "DROP USER IF EXISTS '${SQL_USER}'@'${ANY}';" \
+            -e "FLUSH PRIVILEGES;"
+    fi
     echo "Database ${SQL_DB} and User ${SQL_USER} are deleted!"
 }
 
@@ -174,6 +210,9 @@ while [ ! -z "${1}" ]; do
             ;;
         -[uU] | -user | --user) shift
             SQL_USER="${1}"
+            ;;
+        -[hH] | -dbhost | --dbhost) shift
+            SQL_HOST="${1}"
             ;;
         -[pP] | -password| --password) shift
             SQL_PASS="'${1}'"

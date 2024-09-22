@@ -69,6 +69,7 @@ get_owner(){
 
 get_db_pass(){
 	if [ -f ${DEFAULT_VH_ROOT}/${1}/.db_pass ]; then
+		DB_HOST=$(grep -i Host ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
 		SQL_DB=$(grep -i Database ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
 		SQL_USER=$(grep -i Username ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
 		SQL_PASS=$(grep -i Password ${VH_ROOT}/.db_pass | awk -F ':' '{print $2}' | tr -d '"')
@@ -93,19 +94,26 @@ set_vh_docroot(){
 }
 
 check_sql_native(){
-	local COUNTER=0
-	local LIMIT_NUM=100
-	until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
-		echo "Counter: ${COUNTER}/${LIMIT_NUM}"
-		COUNTER=$((COUNTER+1))
-		if [ ${COUNTER} = 10 ]; then
-			echo '--- MySQL is starting, please wait... ---'
-		elif [ ${COUNTER} = ${LIMIT_NUM} ]; then	
-			echo '--- MySQL is timeout, exit! ---'
-			exit 1
-		fi
-		sleep 1
-	done
+	if [ "${VHNAME}" != '' ]; then
+	    get_db_pass ${VHNAME}
+	else
+		get_db_pass ${DOMAIN}
+	fi
+	if [ "${DB_HOST}" == '' ] then
+		local COUNTER=0
+		local LIMIT_NUM=100
+		until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
+			echo "Counter: ${COUNTER}/${LIMIT_NUM}"
+			COUNTER=$((COUNTER+1))
+			if [ ${COUNTER} = 10 ]; then
+				echo '--- MySQL is starting, please wait... ---'
+			elif [ ${COUNTER} = ${LIMIT_NUM} ]; then	
+				echo '--- MySQL is timeout, exit! ---'
+				exit 1
+			fi
+			sleep 1
+		done
+	fi
 }
 
 install_wp_plugin(){
@@ -570,11 +578,6 @@ END
 }
 
 preinstall_wordpress(){
-	if [ "${VHNAME}" != '' ]; then
-	    get_db_pass ${VHNAME}
-	else
-		get_db_pass ${DOMAIN}
-	fi	
 	if [ ! -f ${VH_DOC_ROOT}/wp-config.php ] && [ -f ${VH_DOC_ROOT}/wp-config-sample.php ]; then
 		cp ${VH_DOC_ROOT}/wp-config-sample.php ${VH_DOC_ROOT}/wp-config.php
 		NEWDBPWD="define('DB_PASSWORD', '${SQL_PASS}');"
