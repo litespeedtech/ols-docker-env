@@ -21,13 +21,13 @@ git clone https://github.com/litespeedtech/ols-docker-env.git
 ```
 
 Open a terminal, `cd` to the folder in which `docker compose.yml` is saved, and run:
-# To use an existing MySQL server
+### To use an existing MySQL server
 ```
 docker compose up -d
 ```
 Note: Be sure to uncomment, and set MYSQL_HOST in the .env file
 
-# To use the included MySQL Server (as well as phpMyAdmin)
+### To use the included MySQL Server (as well as phpMyAdmin)
 ```
 docker compose --profile database up -d
 ```
