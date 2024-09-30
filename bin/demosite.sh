@@ -53,7 +53,7 @@ create_db(){
         echo "Parameters not supplied, please check!"
         exit 1
     else    
-        bash bin/database.sh -D ${1} -U ${MYSQL_USER} -P ${MYSQL_PASSWORD} -DB ${MYSQL_DATABASE}
+        bash bin/database.sh -D ${1} -H ${MYSQL_HOST} -U ${MYSQL_USER} -P ${MYSQL_PASSWORD} -DB ${MYSQL_DATABASE}
     fi    
 }    
 
@@ -63,6 +63,7 @@ store_credential(){
     else
         echo 'Storing database parameter'
         cat > "${DOC_FD}/.db_pass" << EOT
+"Host":"${MYSQL_HOST}"
 "Database":"${MYSQL_DATABASE}"
 "Username":"${MYSQL_USER}"
 "Password":"$(echo ${MYSQL_PASSWORD} | tr -d "'")"
