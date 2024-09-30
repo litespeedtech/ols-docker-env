@@ -19,21 +19,16 @@ Clone this repository or copy the files from this repository into a new folder:
 ```
 git clone https://github.com/litespeedtech/ols-docker-env.git
 ```
-
 Open a terminal, `cd` to the folder in which `docker compose.yml` is saved, and run:
-### To use an existing MySQL server
 ```
-docker compose up -d
+docker compose up
 ```
-Note: Be sure to uncomment, and set MYSQL_HOST in the .env file
-
-### To use the included MySQL Server (as well as phpMyAdmin)
-```
-docker compose --profile database up -d
-```
-Note: Be sure MYSQL_HOST is commented out in the .env file
 
 Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
+
+#### To use your own DataBase Server (including phpMyAdmin)
+1. Comment out MYSQL_HOST and update the IP in the .env file.
+2. Start containers with the command: `docker compose --profile database up -d`
 
 ## Components
 The docker image installs the following packages on your system:
