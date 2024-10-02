@@ -31,9 +31,9 @@ The docker image installs the following packages on your system:
 
 |Component|Version|
 | :-------------: | :-------------: |
-|Linux|Ubuntu 22.04|
+|Linux|Ubuntu 24.04|
 |OpenLiteSpeed|[Latest version](https://hub.docker.com/r/litespeedtech/openlitespeed)|
-|MariaDB|[Stable version: 10.5](https://hub.docker.com/_/mariadb)|
+|MariaDB|[Stable version: 11.4](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
@@ -176,12 +176,12 @@ bash bin/webadmin.sh [-M, --mod-secure] disable
 After installation, you can use phpMyAdmin to access the database by visiting `http://127.0.0.1:8080` or `https://127.0.0.1:8443`. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
 ## Customization
-If you want to customize the image by adding some packages, e.g. `lsphp80-pspell`, just extend it with a Dockerfile. 
+If you want to customize the image by adding some packages, e.g. `lsphp83-pspell`, just extend it with a Dockerfile. 
 1. We can create a `custom` folder and a `custom/Dockerfile` file under the main project. 
 2. Add the following example code to `Dockerfile` under the custom folder
 ```
 FROM litespeedtech/openlitespeed:latest
-RUN apt-get update && apt-get install lsphp80-pspell -y
+RUN apt-get update && apt-get install lsphp83-pspell -y
 ```
 3. Add `build: ./custom` line under the "image: litespeedtech" of docker-composefile. So it will looks like this 
 ```
