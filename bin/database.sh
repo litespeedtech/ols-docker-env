@@ -83,7 +83,7 @@ EOT
 }
 
 check_db_access(){
-    docker compose exec -T mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
+    docker compose exec -T mysql su -c "mariadb -uroot --password=${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     if [ ${?} != 0 ]; then
         echo '[X] DB access failed, please check!'
         exit 1
@@ -107,7 +107,7 @@ check_db_not_exist(){
 }
 
 db_setup(){  
-    docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+    docker compose exec -T mysql su -c 'mariadb -uroot --password=${MYSQL_ROOT_PASSWORD} \
     -e "CREATE DATABASE '${SQL_DB}';" \
     -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
     -e "FLUSH PRIVILEGES;"'
@@ -123,7 +123,7 @@ db_delete(){
         SQL_USER="${SQL_DB}"
     fi
     check_db_not_exist ${SQL_DB}
-    docker compose exec -T mysql su -c 'mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+    docker compose exec -T mysql su -c 'mariadb -uroot --password=${MYSQL_ROOT_PASSWORD} \
         -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
         -e "DROP USER IF EXISTS '${SQL_USER}'@'${ANY}';" \
         -e "FLUSH PRIVILEGES;"'
