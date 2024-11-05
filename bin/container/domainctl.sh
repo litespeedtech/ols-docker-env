@@ -94,16 +94,16 @@ add_domain(){
         if [ "${CK_RESULT}" != '' ]; then
             echo "# It appears the domain already exist! Check the ${LS_HTTPD_CONF} if you believe this is a mistake!"
             exit 1
-        fi    
+        fi
+        add_ls_domain 
     elif [ "${LSV}" = 'openlitespeed' ]; then
         check_duplicate "member.*${DOMAIN}" ${OLS_HTTPD_CONF}
         if [ "${CK_RESULT}" != '' ]; then
             echo "# It appears the domain already exist! Check the ${OLS_HTTPD_CONF} if you believe this is a mistake!"
             exit 1
-        fi        
-    fi
-    add_ls_domain
-    add_ols_domain
+        fi  
+        add_ols_domain      
+    fi   
 }
 
 del_ls_domain(){
