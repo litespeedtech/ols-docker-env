@@ -4,7 +4,7 @@
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a lightweight WordPress container with OpenLiteSpeed Edge or Stable version based on Ubuntu 22.04 Linux.
+Install a lightweight WordPress container with OpenLiteSpeed Edge or Stable version based on Ubuntu 24.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)

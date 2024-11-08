@@ -129,15 +129,15 @@ del_domain(){
             echo "# Domain non-exist! Check the ${LS_HTTPD_CONF} if you believe this is a mistake!"
             exit 1
         fi
+        del_ls_domain ${1}
     elif [ "${LSV}" = 'openlitespeed' ]; then
         check_duplicate "member.*${DOMAIN}" ${OLS_HTTPD_CONF}
         if [ "${CK_RESULT}" = '' ]; then
             echo "# Domain non-exist! Check the ${OLS_HTTPD_CONF} if you believe this is a mistake!"
             exit 1
-        fi        
+        fi
+        del_ols_domain ${1}     
     fi
-    del_ls_domain ${1}
-    del_ols_domain ${1}
 }
 
 check_input ${1}
