@@ -27,9 +27,9 @@ services:
       - ./acme:/root/.acme.sh/
       - ./logs:/usr/local/lsws/logs/
     ports:
-      - 80:80
-      - 443:443
-      - 443:443/udp
+      - 780:80
+      - 7443:443
+      - 7443:443/udp
       - 7080:7080
     restart: always
     environment:
