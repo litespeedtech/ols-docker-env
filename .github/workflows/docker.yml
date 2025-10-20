@@ -16,13 +16,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Setup
         run: |
-          docker-compose -v
-          docker-compose up -d
+          docker compose version
+          docker compose up -d
           docker image ls
           sleep 10
       - name: Verify
         run: bash .travis/verify.sh    
       - name: Clean up 
         run: |
-         docker-compose stop
-         docker-compose rm -f            
+         docker compose stop
+         docker compose rm -f            

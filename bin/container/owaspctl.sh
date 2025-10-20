@@ -1,11 +1,12 @@
 #!/bin/bash
 LSDIR='/usr/local/lsws'
 OWASP_DIR="${LSDIR}/conf/owasp"
+CRS_DIR='owasp-modsecurity-crs'
 RULE_FILE='modsec_includes.conf'
 LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
 OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
 EPACE='        '
-OWASP_V='3.3.4'
+OWASP_V='4.3.0'
 
 echow(){
     FLAG=${1}
@@ -90,7 +91,7 @@ enable_ls_modsec(){
         <censorshipRuleSet>\n\
         <name>ModSec</name>\n\
         <enabled>1</enabled>\n\
-        <ruleSet>include ${OWASP_DIR}/modsec_includes.conf</ruleSet>\n\
+        <ruleSet>include ${OWASP_DIR}/${RULE_FILE}</ruleSet>\n\
         </censorshipRuleSet>=" ${LS_HTTPD_CONF}
     fi
 }
@@ -146,68 +147,50 @@ install_unzip(){
     fi
 }
 
+backup_owasp(){
+    if [ -d ${OWASP_DIR} ]; then
+        echo "Detect ${OWASP_DIR} folder exist, move to ${OWASP_DIR}.$(date +%F).bk"
+        if [ -d ${OWASP_DIR}.$(date +%F).bk ]; then
+            rm -rf ${OWASP_DIR}.$(date +%F).bk
+        fi
+        mv ${OWASP_DIR} ${OWASP_DIR}.$(date +%F).bk
+    fi
+}   
+
 install_owasp(){
     cd ${OWASP_DIR}
     echo 'Download OWASP rules'
     wget -q https://github.com/coreruleset/coreruleset/archive/refs/tags/v${OWASP_V}.zip
     unzip -qq v${OWASP_V}.zip
     rm -f v${OWASP_V}.zip
-    mv coreruleset-* owasp-modsecurity-crs
+    mv coreruleset-* ${CRS_DIR}
 }
 
 configure_owasp(){
     echo 'Config OWASP rules.'
     cd ${OWASP_DIR}
-    echo "include modsecurity.conf
-include owasp-modsecurity-crs/crs-setup.conf
-include owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-include owasp-modsecurity-crs/rules/REQUEST-901-INITIALIZATION.conf
-include owasp-modsecurity-crs/rules/REQUEST-903.9001-DRUPAL-EXCLUSION-RULES.conf
-include owasp-modsecurity-crs/rules/REQUEST-903.9002-WORDPRESS-EXCLUSION-RULES.conf
-include owasp-modsecurity-crs/rules/REQUEST-903.9003-NEXTCLOUD-EXCLUSION-RULES.conf
-include owasp-modsecurity-crs/rules/REQUEST-903.9004-DOKUWIKI-EXCLUSION-RULES.conf
-include owasp-modsecurity-crs/rules/REQUEST-903.9005-CPANEL-EXCLUSION-RULES.conf
-include owasp-modsecurity-crs/rules/REQUEST-903.9006-XENFORO-EXCLUSION-RULES.conf
-include owasp-modsecurity-crs/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
-include owasp-modsecurity-crs/rules/REQUEST-910-IP-REPUTATION.conf
-include owasp-modsecurity-crs/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
-include owasp-modsecurity-crs/rules/REQUEST-912-DOS-PROTECTION.conf
-include owasp-modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf
-include owasp-modsecurity-crs/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
-include owasp-modsecurity-crs/rules/REQUEST-921-PROTOCOL-ATTACK.conf
-include owasp-modsecurity-crs/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
-include owasp-modsecurity-crs/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
-include owasp-modsecurity-crs/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
-include owasp-modsecurity-crs/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
-include owasp-modsecurity-crs/rules/REQUEST-934-APPLICATION-ATTACK-NODEJS.conf
-include owasp-modsecurity-crs/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
-include owasp-modsecurity-crs/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
-include owasp-modsecurity-crs/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
-include owasp-modsecurity-crs/rules/REQUEST-944-APPLICATION-ATTACK-JAVA.conf
-include owasp-modsecurity-crs/rules/REQUEST-949-BLOCKING-EVALUATION.conf
-include owasp-modsecurity-crs/rules/RESPONSE-950-DATA-LEAKAGES.conf
-include owasp-modsecurity-crs/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
-include owasp-modsecurity-crs/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
-include owasp-modsecurity-crs/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
-include owasp-modsecurity-crs/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
-include owasp-modsecurity-crs/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
-include owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
-include owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf">modsec_includes.conf
-    echo "SecRuleEngine On">modsecurity.conf
-    cd ${OWASP_DIR}/owasp-modsecurity-crs
-    if [ -f crs-setup.conf.example ]; then
-        mv crs-setup.conf.example crs-setup.conf
+    if [ -f ${CRS_DIR}/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example ]; then
+        mv ${CRS_DIR}/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example ${CRS_DIR}/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+    fi
+    if [ -f ${CRS_DIR}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example ]; then
+        mv ${CRS_DIR}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example ${CRS_DIR}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+    fi
+    if [ -f ${RULE_FILE} ]; then
+        mv ${RULE_FILE} ${RULE_FILE}.bk
+    fi
+    echo 'include modsecurity.conf' >> ${RULE_FILE}
+    if [ -f ${CRS_DIR}/crs-setup.conf.example ]; then
+        mv ${CRS_DIR}/crs-setup.conf.example ${CRS_DIR}/crs-setup.conf
+        echo "include ${CRS_DIR}/crs-setup.conf" >> ${RULE_FILE}
     fi    
-    cd ${OWASP_DIR}/owasp-modsecurity-crs/rules
-    if [ -f REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example ]; then
-        mv REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-    fi
-    if [ -f RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example ]; then
-        mv RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
-    fi
+    ALL_RULES="$(ls ${CRS_DIR}/rules/ | grep 'REQUEST-\|RESPONSE-')"
+    echo "${ALL_RULES}"  | while read LINE; do echo "include ${CRS_DIR}/rules/${LINE}" >> ${RULE_FILE}; done
+    echo 'SecRuleEngine On' > modsecurity.conf
+    chown -R lsadm ${OWASP_DIR}
 }
 
 main_owasp(){
+    backup_owasp
     mk_owasp_dir
     install_unzip
     install_owasp

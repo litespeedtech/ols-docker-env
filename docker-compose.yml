@@ -1,10 +1,9 @@
-version: '3'
 services:
   mysql:
-    image: mariadb:10.5.9
+    image: mariadb:11.4
     logging:
       driver: none
-    command: --max_allowed_packet=256M
+    command: ["--max-allowed-packet=512M"]
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
     environment:
@@ -17,8 +16,7 @@ services:
       - default
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
-    logging:
-      driver: none
+    container_name: litespeed
     env_file:
       - .env
     volumes:
@@ -62,6 +60,16 @@ services:
       - ./data/redis:/data
     ports:
       - 6379:6379
+  redis:
+    image: "redis:alpine"
+    logging:
+      driver: none
+    # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
+    volumes:
+      - ./redis/data:/var/lib/redis
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
     restart: always
     networks:
       - default
