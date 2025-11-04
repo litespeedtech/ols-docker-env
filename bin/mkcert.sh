@@ -2,16 +2,19 @@
 DOMAIN=''
 INSTALL=''
 REMOVE=''
+TEST=''
 CONT_NAME='litespeed'
 CERT_DIR='./certs'
 EPACE='        '
 
+# Function to print messages with a specific format
 echow(){
     FLAG=${1}
     shift
     echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
 }
 
+# Function to display help message
 help_message(){
     echo -e "\033[1mUSAGE\033[0m"
     echo "${EPACE}mkcert.sh [OPTIONS]"
@@ -29,12 +32,14 @@ help_message(){
     exit 0
 }
 
+# Function to check input parameters
 check_input(){
     if [ -z "${1}" ]; then
         help_message
     fi
 }
 
+# Function to filter and extract domain name
 domain_filter(){
     if [ -z "${1}" ]; then
         echo "[X] Domain name is required!"
@@ -47,6 +52,7 @@ domain_filter(){
     DOMAIN="${DOMAIN%%/*}"
 }
 
+# Function to get www version of the domain
 www_domain(){
     CHECK_WWW=$(echo ${1} | cut -c1-4)
     if [[ ${CHECK_WWW} == www. ]] ; then
@@ -57,81 +63,73 @@ www_domain(){
     WWW_DOMAIN="www.${DOMAIN}"
 }
 
-check_mkcert(){
-    echo '[Start] Checking mkcert installation'
-    
-    # Try .exe first (for WSL/Windows)
-    if command -v mkcert.exe >/dev/null 2>&1; then
-        MKCERT_CMD="mkcert.exe"
-        echo -e "[O] mkcert is installed (using: mkcert.exe)"
-    elif command -v mkcert >/dev/null 2>&1; then
-        MKCERT_CMD="mkcert"
-        echo -e "[O] mkcert is installed (using: mkcert)"
+# Function to check if mkcert is installed
+check_mkcert() {
+    echo "[Start] Checking mkcert installation..."
+
+    # Detect mkcert command (Windows supported, other OS can be added later)
+    if MKCERT_CMD=$(command -v mkcert.exe 2>/dev/null || command -v mkcert 2>/dev/null); then
+        echo "[✔] mkcert found at: ${MKCERT_CMD}"
     else
-        echo "[X] mkcert is not installed!"
-        echo "[!] Please run: ./bin/mkcert.sh --install"
-        echo "[!] Or install manually: choco install mkcert"
+        echo "[✖] mkcert not found!"
+        echo "→ Please run 'bash bin/mkcert.sh --install' or install it manually."
+        echo "   Windows: choco install mkcert"
+        echo "   (Linux/macOS support can be added here later)"
         exit 1
     fi
-    
-    echo '[End] Checking mkcert'
+
+    echo "[End] mkcert check completed."
 }
 
-install_mkcert(){
-    echo '[Start] Installing mkcert'
-    
-    # Try Windows executable first (for WSL/Git Bash)
-    choco.exe --version > /dev/null 2>&1
-    CHOCO_CHECK=$?
-    
-    # If .exe doesn't work, try without extension
-    if [ ${CHOCO_CHECK} != 0 ]; then
-        choco --version > /dev/null 2>&1
-        CHOCO_CHECK=$?
-    fi
-    
-    if [ ${CHOCO_CHECK} != 0 ]; then
-        echo "[X] Chocolatey is not installed or not in PATH!"
-        echo "[!] Please install Chocolatey first: https://chocolatey.org/install"
-        echo "[!] After installation, restart your terminal"
-        exit 1
-    fi
-    
-    echo "[O] Chocolatey is installed"
-    
-    # Check if mkcert already installed (try .exe first for WSL)
-    mkcert.exe -version > /dev/null 2>&1
-    MKCERT_CHECK=$?
-    
-    if [ ${MKCERT_CHECK} != 0 ]; then
-        mkcert -version > /dev/null 2>&1
-        MKCERT_CHECK=$?
-    fi
-    
-    if [ ${MKCERT_CHECK} = 0 ]; then
-        echo "[!] mkcert is already installed"
-        MKCERT_VERSION=$(mkcert.exe -version 2>&1 || mkcert -version 2>&1 | head -n 1)
-        echo "[!] Version: ${MKCERT_VERSION}"
-        echo "[!] Running mkcert -install to ensure local CA is configured..."
-        mkcert.exe -install || mkcert -install
-        echo '[End] Installing mkcert'
+# Function to install mkcert on Windows using Chocolatey
+# ------------------------------------------------------------------------------
+# 💡 Notes for contributors:
+#   - This script currently supports Windows / WSL / Git Bash only.
+#   - To extend for macOS or Linux, add logic below:
+#       macOS:  brew install mkcert nss
+#       Ubuntu: sudo apt install mkcert libnss3-tools
+#       Fedora: sudo dnf install mkcert nss-tools
+# ------------------------------------------------------------------------------
+install_mkcert() {
+    echo "[Start] Installing mkcert..."
+
+    # 1️⃣ Check if mkcert is already installed
+    if command -v mkcert.exe >/dev/null 2>&1 || command -v mkcert >/dev/null 2>&1; then
+        echo "[O] mkcert is already installed."
+        echo "[!] Ensuring local CA is installed..."
+        # Ensure local CA is installed
+        (mkcert.exe -install || mkcert -install)
+        echo "[O] Local CA configured."
+        echo "[End] mkcert installation check complete."
         return 0
     fi
-    
-    echo "[!] Installing mkcert via Chocolatey..."
-    choco.exe install mkcert -y || choco install mkcert -y
-    
-    if [ ${?} = 0 ]; then
-        echo -e "[O] mkcert installed successfully"
-        echo "[!] Running mkcert -install to create local CA..."
-        mkcert.exe -install || mkcert -install
-        echo '[End] Installing mkcert'
+
+    # 2️⃣ Check if Chocolatey is available
+    if ! command -v choco.exe >/dev/null 2>&1 && ! command -v choco >/dev/null 2>&1; then
+        echo "[X] Chocolatey not found!"
+        echo "→ Please install Chocolatey from: https://chocolatey.org/install"
+        echo "→ After installation, restart your terminal and re-run this script."
+        exit 1
+    fi
+
+    # 3️⃣ Install mkcert using Chocolatey
+    echo "[*] Installing mkcert via Chocolatey..."
+    (choco.exe install mkcert -y || choco install mkcert -y)
+
+    # 4️⃣ Verify installation result
+    if command -v mkcert.exe >/dev/null 2>&1 || command -v mkcert >/dev/null 2>&1; then
+        echo "[O] mkcert installed successfully."
+        echo "[!] Creating local CA..."
+        (mkcert.exe -install || mkcert -install)
+        echo "[O] Local CA configured."
+        echo "[End] mkcert installation complete."
     else
-        echo "[X] Failed to install mkcert"
+        echo "[X] mkcert installation failed!"
         exit 1
     fi
 }
 
+# Function to create certificate directory if it doesn't exist
 create_cert_dir(){
     if [ ! -d "${CERT_DIR}" ]; then
         echo "[!] Creating certificate directory: ${CERT_DIR}"
@@ -139,6 +137,7 @@ create_cert_dir(){
     fi
 }
 
+# Function to generate SSL certificate using mkcert
 generate_cert(){
     echo '[Start] Generating SSL certificate'
     domain_filter "${DOMAIN}"
@@ -146,27 +145,24 @@ generate_cert(){
     
     create_cert_dir
     
-    cd "${CERT_DIR}"
+    mkdir -p "${CERT_DIR}/${DOMAIN}"
+
+    cd "${CERT_DIR}/${DOMAIN}"
     
     echo -e "[!] Generating certificate for: \033[32m${DOMAIN}\033[0m and \033[32m${WWW_DOMAIN}\033[0m"
     
     # Use the detected mkcert command
-    ${MKCERT_CMD} "${DOMAIN}" "${WWW_DOMAIN}"
+    ${MKCERT_CMD} -key-file key.pem -cert-file cert.pem "${DOMAIN}" "${WWW_DOMAIN}" >/dev/null 2>&1
     
     if [ ${?} = 0 ]; then
         echo -e "[O] Certificate generated successfully"
-        
-        # Rename files to standard format
-        CERT_FILE="${DOMAIN}+1.pem"
-        KEY_FILE="${DOMAIN}+1-key.pem"
-        
-        if [ -f "${CERT_FILE}" ] && [ -f "${KEY_FILE}" ]; then
-            echo "[!] Certificate files:"
-            echo "${EPACE}Cert: ${CERT_DIR}/${CERT_FILE}"
-            echo "${EPACE}Key:  ${CERT_DIR}/${KEY_FILE}"
-        fi
+        echo "[!] Certificate files:"
+        echo "${EPACE}Cert: ${CERT_DIR}/${DOMAIN}/cert.pem"
+        echo "${EPACE}Key:  ${CERT_DIR}/${DOMAIN}/key.pem"
     else
         echo "[X] Failed to generate certificate"
+        cd ../..
+        rm -rf "${CERT_DIR}/${DOMAIN}"
         exit 1
     fi
     
@@ -175,99 +171,87 @@ generate_cert(){
 }
 
 configure_litespeed(){
-    echo '[Start] Configuring OpenLiteSpeed'
+    echo '[Start] Configuring OpenLiteSpeed for domain'
     
-    CERT_FILE="${DOMAIN}+1.pem"
-    KEY_FILE="${DOMAIN}+1-key.pem"
+    local cert_host_path="${CERT_DIR}/${DOMAIN}"
     
     # Check if certificate files exist
-    if [ ! -f "${CERT_DIR}/${CERT_FILE}" ] || [ ! -f "${CERT_DIR}/${KEY_FILE}" ]; then
-        echo "[X] Certificate files not found!"
+    if [ ! -f "${cert_host_path}/cert.pem" ] || [ ! -f "${cert_host_path}/key.pem" ]; then
+        echo "[X] Certificate files not found on host at: ${cert_host_path}"
         exit 1
     fi
     
     echo "[!] Configuring SSL for domain: ${DOMAIN}"
     
-    LSWS_CONF_DIR="/usr/local/lsws/conf"
-    HTTPD_CONF="${LSWS_CONF_DIR}/httpd_config.conf"
-    
-    # Copy certificates to container
-    docker compose cp "${CERT_DIR}/${CERT_FILE}" ${CONT_NAME}:${LSWS_CONF_DIR}/cert/
-    docker compose cp "${CERT_DIR}/${KEY_FILE}" ${CONT_NAME}:${LSWS_CONF_DIR}/cert/
-    
-    echo "[O] Certificates copied to container"
-    
-    # Backup config
-    docker compose exec -T ${CONT_NAME} bash -c "cp ${HTTPD_CONF} ${HTTPD_CONF}.backup.\$(date +%Y%m%d_%H%M%S)"
-    echo "[O] Config backed up"
-    
-    # Kiểm tra xem đã có SSL Listener chưa
-    HAS_SSL=$(docker compose exec -T ${CONT_NAME} bash -c "grep -c 'listener Default HTTPS' ${HTTPD_CONF}" | tr -d '\r')
-    
-    if [ "${HAS_SSL}" = "0" ]; then
-        echo '[!] Creating new SSL Listener...'
-        
-        # Tạo SSL listener mới
-        docker compose exec -T ${CONT_NAME} bash -c "cat >> ${HTTPD_CONF} <<'LISTENER_EOF'
+    # Define paths inside the container
+    local lsws_conf_dir="/usr/local/lsws/conf"
+    local httpd_conf="${lsws_conf_dir}/httpd_config.conf"
+    local vhosts_dir="${lsws_conf_dir}/vhosts"
+    local cert_container_path="${lsws_conf_dir}/cert/${DOMAIN}"
 
-listener Default HTTPS {
-  address                 *:443
-  secure                  1
-  keyFile                 ${LSWS_CONF_DIR}/cert/${KEY_FILE}
-  certFile                ${LSWS_CONF_DIR}/cert/${CERT_FILE}
-  certChain               1
-  sslProtocol             24
-  enableSpdy              15
-  map                     ${DOMAIN} ${DOMAIN}
-}
-LISTENER_EOF
-"
-        echo '[O] SSL Listener created'
-    else
-        echo '[!] SSL Listener exists, updating...'
-        
-        # Cập nhật cert paths
-        docker compose exec -T ${CONT_NAME} bash -c "
-            sed -i '/listener Default HTTPS/,/^}/s|keyFile.*|  keyFile                 ${LSWS_CONF_DIR}/cert/${KEY_FILE}|' ${HTTPD_CONF}
-            sed -i '/listener Default HTTPS/,/^}/s|certFile.*|  certFile                ${LSWS_CONF_DIR}/cert/${CERT_FILE}|' ${HTTPD_CONF}
-        "
-        echo '[O] Certificate paths updated'
-        
-        # Kiểm tra xem domain đã được map chưa
-        HAS_MAPPING=$(docker compose exec -T ${CONT_NAME} bash -c "grep -A 15 'listener Default HTTPS' ${HTTPD_CONF} | grep -c 'map.*${DOMAIN}'" | tr -d '\r')
-        
-        if [ "${HAS_MAPPING}" = "0" ]; then
-            # Thêm mapping
-            docker compose exec -T ${CONT_NAME} bash -c "
-                sed -i '/listener Default HTTPS/,/^}/ {
-                    /^}/i\  map                     ${DOMAIN} ${DOMAIN}
-                }' ${HTTPD_CONF}
-            "
-            echo '[O] Domain mapping added to SSL Listener'
-        else
-            echo '[!] Domain mapping already exists'
-        fi
+    # Find the Virtual Host name mapped to the domain
+    echo "[!] Searching for Virtual Host mapped to '${DOMAIN}'..."
+    local vhost_name=$(docker compose exec -T ${CONT_NAME} bash -c "grep -B 2 'vhDomain.*${DOMAIN}' ${httpd_conf} | grep 'member' | awk '{print \$2}'" | tr -d '\r')
+
+    if [ -z "${vhost_name}" ]; then
+        echo "[X] No Virtual Host found for domain '${DOMAIN}' in ${httpd_conf}."
+        echo "[!] Please add this domain to your environment first (e.g., using the 'domain' script)."
+        exit 1
     fi
-    
-    echo ""
-    echo "[!] Current SSL Listener configuration:"
-    docker compose exec -T ${CONT_NAME} bash -c "grep -A 15 'listener Default HTTPS' ${HTTPD_CONF}"
-    echo ""
+    echo "[O] Found Virtual Host member name: '${vhost_name}'"
+
+    local vhconf_path="${vhosts_dir}/${vhost_name}/vhconf.conf"
+
+    # Copy certificate files into the container
+    echo "[!] Copying certificates to container..."
+    docker compose exec -T ${CONT_NAME} bash -c "mkdir -p ${cert_container_path}"
+    docker compose cp "${cert_host_path}/cert.pem" "${CONT_NAME}:${cert_container_path}/cert.pem"
+    docker compose cp "${cert_host_path}/key.pem" "${CONT_NAME}:${cert_container_path}/key.pem"
+    echo "[O] Certificates copied to container at: ${cert_container_path}"
+
+    # Modify the vhost configuration to enable SSL
+    echo "[!] Modifying vhost config: ${vhconf_path}"
+    docker compose exec -T ${CONT_NAME} bash -c "
+        # Create vhconf.conf if it doesn't exist
+        if [ ! -f ${vhconf_path} ]; then
+            mkdir -p \$(dirname ${vhconf_path})
+            touch ${vhconf_path}
+            echo '[O] Created missing vhconf.conf file.'
+        fi
+
+        # Backup vhconf.conf
+        cp ${vhconf_path} ${vhconf_path}.backup.\$(date +%Y%m%d_%H%M%S)
+
+        # Remove existing vhssl block if present to avoid duplicates
+        sed -i '/vhssl[[:space:]]*{/,/}/d' ${vhconf_path}
+        sed -i '/^virtualHostConfig[[:space:]]*{/,/}/d' ${vhconf_path}
+
+        # Add new SSL configuration inside a virtualHostConfig block
+        cat >> ${vhconf_path} <<VHSSL_EOF
+vhssl {
+  keyFile                 ${cert_container_path}/key.pem
+  certFile                ${cert_container_path}/cert.pem
+  certChain               1
+}
+VHSSL_EOF
+    "
     
     if [ ${?} = 0 ]; then
-        echo -e "[O] SSL configured for: \033[32m${DOMAIN}\033[0m"
-        echo "[!] Restarting OpenLiteSpeed..."
+        echo -e "[O] SSL configured for vhost: \033[32m${vhost_name}\033[0m"
+        echo "[!] Restarting OpenLiteSpeed to apply changes..."
         lsws_restart
     else
-        echo "[X] Failed to configure SSL"
+        echo "[X] Failed to configure SSL for vhost"
         exit 1
     fi
     
     echo '[End] Configuring OpenLiteSpeed'
 }
 
-lsws_restart(){
+# Function to restart the OpenLiteSpeed service inside a Docker container
+lsws_restart() {
     docker compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+
     if [ ${?} = 0 ]; then
         echo -e "[O] OpenLiteSpeed restarted successfully"
     else
@@ -281,23 +265,87 @@ remove_cert(){
     
     CERT_FILE="${DOMAIN}+1.pem"
     KEY_FILE="${DOMAIN}+1-key.pem"
+    LSWS_CONF_DIR="/usr/local/lsws/conf"
+    HTTPD_CONF="${LSWS_CONF_DIR}/httpd_config.conf"
     
+    # 1. Xóa chứng chỉ trên host
     if [ -f "${CERT_DIR}/${CERT_FILE}" ]; then
         rm "${CERT_DIR}/${CERT_FILE}"
         echo -e "[O] Removed: ${CERT_DIR}/${CERT_FILE}"
+    else
+        echo "[!] Certificate file not found: ${CERT_DIR}/${CERT_FILE}"
     fi
     
     if [ -f "${CERT_DIR}/${KEY_FILE}" ]; then
         rm "${CERT_DIR}/${KEY_FILE}"
         echo -e "[O] Removed: ${CERT_DIR}/${KEY_FILE}"
+    else
+        echo "[!] Key file not found: ${CERT_DIR}/${KEY_FILE}"
     fi
     
-    # Remove SSL listener config
-    SSL_LISTENER="/usr/local/lsws/conf/cert/${DOMAIN}.xml"
-    docker compose exec ${CONT_NAME} bash -c "[ -f ${SSL_LISTENER} ] && rm ${SSL_LISTENER}"
+    # 2. Xóa chứng chỉ trong container
+    docker compose exec -T ${CONT_NAME} bash -c "
+        if [ -f ${LSWS_CONF_DIR}/cert/${CERT_FILE} ]; then
+            rm ${LSWS_CONF_DIR}/cert/${CERT_FILE}
+            echo '[O] Removed certificate from container'
+        fi
+        
+        if [ -f ${LSWS_CONF_DIR}/cert/${KEY_FILE} ]; then
+            rm ${LSWS_CONF_DIR}/cert/${KEY_FILE}
+            echo '[O] Removed key from container'
+        fi
+    "
     
-    echo '[End] Removing SSL certificate'
+    # 3. Xóa domain mapping khỏi SSL Listener
+    echo "[!] Removing domain mapping from SSL Listener..."
+    
+    HAS_MAPPING=$(docker compose exec -T ${CONT_NAME} bash -c "grep -c 'map.*${DOMAIN}' ${HTTPD_CONF}" | tr -d '\r')
+    
+    if [ "${HAS_MAPPING}" != "0" ]; then
+        # Backup trước khi xóa
+        docker compose exec -T ${CONT_NAME} bash -c "cp ${HTTPD_CONF} ${HTTPD_CONF}.backup.\$(date +%Y%m%d_%H%M%S)"
+        
+        # Xóa dòng map của domain
+        docker compose exec -T ${CONT_NAME} bash -c "
+            sed -i '/listener Default HTTPS/,/^}/ {
+                /map.*${DOMAIN}/d
+            }' ${HTTPD_CONF}
+        "
+        echo -e "[O] Removed domain mapping for: \033[32m${DOMAIN}\033[0m"
+        
+        # Kiểm tra xem còn domain nào được map không
+        REMAINING_MAPS=$(docker compose exec -T ${CONT_NAME} bash -c "grep -A 15 'listener Default HTTPS' ${HTTPD_CONF} | grep -c 'map'" | tr -d '\r')
+        
+        if [ "${REMAINING_MAPS}" = "0" ]; then
+            echo "[!] No more domains mapped to SSL Listener"
+            echo "[?] Do you want to remove the entire SSL Listener? (y/N)"
+            read -r REMOVE_LISTENER
+            
+            if [[ "${REMOVE_LISTENER}" =~ ^[Yy]$ ]]; then
+                docker compose exec -T ${CONT_NAME} bash -c "
+                    sed -i '/listener Default HTTPS {/,/^}/d' ${HTTPD_CONF}
+                "
+                echo "[O] SSL Listener removed"
+            fi
+        fi
+    else
+        echo "[!] Domain mapping not found in SSL Listener"
+    fi
+    
+    # 4. Hiển thị cấu hình hiện tại
+    echo ""
+    echo "[!] Current SSL Listener configuration:"
+    docker compose exec -T ${CONT_NAME} bash -c "grep -A 15 'listener Default HTTPS' ${HTTPD_CONF}" || echo "[!] No SSL Listener found"
+    echo ""
+    
+    # 5. Restart LiteSpeed
+    echo "[!] Restarting OpenLiteSpeed..."
     lsws_restart
+    
+    echo ""
+    echo -e "\033[1m[SUCCESS] Certificate removed for domain: ${DOMAIN}\033[0m"
+    echo ""
+    echo '[End] Removing SSL certificate'
 }
 
 main(){
@@ -310,21 +358,18 @@ main(){
         remove_cert
         exit 0
     fi
-    
+
+    if [ "${TEST}" = 'true' ]; then
+        check_mkcert
+        exit 0
+    fi
+
     check_mkcert
     generate_cert
     configure_litespeed
-    
-    echo ""
-    echo -e "\033[1m[SUCCESS] SSL certificate setup completed!\033[0m"
-    echo ""
-    echo "Next steps:"
-    echo "1. Add '${DOMAIN}' to your Windows hosts file (C:\Windows\System32\drivers\etc\hosts)"
-    echo "   Example: 127.0.0.1 ${DOMAIN} ${WWW_DOMAIN}"
-    echo "2. Configure your virtual host to use SSL-${DOMAIN} listener"
-    echo "3. Access https://${DOMAIN} in your browser"
 }
 
+# Parse command-line arguments
 check_input ${1}
 while [ ! -z "${1}" ]; do
     case ${1} in
@@ -341,6 +386,9 @@ while [ ! -z "${1}" ]; do
             ;;
         -[rR] | --remove)
             REMOVE=true
+            ;;
+        -[tT] | --test) 
+            TEST=true
             ;;
         *) 
             help_message
