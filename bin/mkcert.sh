@@ -2,7 +2,6 @@
 DOMAIN=''
 INSTALL=''
 REMOVE=''
-TEST=''
 CONT_NAME='litespeed'
 CERT_DIR='./certs'
 EPACE='        '
@@ -137,10 +136,27 @@ create_cert_dir(){
     fi
 }
 
+# Function to verify if domain has been added (by checking document root existence)
+domain_verify(){
+    local domain="${1}"
+    local doc_path="/var/www/vhosts/${domain}/html"
+    
+    echo "[!] Checking if domain '${domain}' has been added..."
+    
+    if docker compose exec -T ${CONT_NAME} bash -c "[ -d ${doc_path} ]" 2>/dev/null; then
+        echo -e "[O] Domain \033[32m${domain}\033[0m exists (document root found)"
+        return 0
+    else
+        echo -e "[X] Domain \033[31m${domain}\033[0m has NOT been added yet!"
+        echo "[!] Document root not found: ${doc_path}"
+        echo "[!] Please add this domain first using: bash bin/domain.sh -a ${domain}"
+        exit 1
+    fi
+}
+
 # Function to generate SSL certificate using mkcert
 generate_cert(){
     echo '[Start] Generating SSL certificate'
-    domain_filter "${DOMAIN}"
     www_domain "${DOMAIN}"
     
     create_cert_dir
@@ -170,8 +186,78 @@ generate_cert(){
     echo '[End] Generating SSL certificate'
 }
 
+# Function to create docker-local.conf template for local development
+create_local_template(){
+    echo '[Start] Creating docker-local.conf template'
+    
+    local source_file="/usr/local/lsws/conf/templates/docker.conf"
+    local dest_file="/usr/local/lsws/conf/templates/docker-local.conf"
+
+    # Check if template file already exists
+    if docker compose exec -T ${CONT_NAME} bash -c "[ -f ${dest_file} ]" 2>/dev/null; then
+        echo "[i] Template file already exists: ${dest_file}"
+        echo '[End] Creating docker-local.conf template'
+        return 0
+    fi
+    
+    # Copy and modify template file in a single command
+    docker compose exec -T ${CONT_NAME} bash -c "
+        # Copy template file
+        cp ${source_file} ${dest_file}
+        
+        # Remove old vhssl block and last closing brace
+        sed -i '/^  vhssl  {/,/^  }/d; \$d' ${dest_file}
+        
+        # Append new vhssl configuration
+        cat >> ${dest_file} <<'VHSSL_EOF'
+  vhssl  {
+    keyFile               /usr/local/lsws/conf/cert/\$VH_NAME/key.pem
+    certFile              /usr/local/lsws/conf/cert/\$VH_NAME/cert.pem
+    certChain             1
+  }
+}
+VHSSL_EOF
+        
+        # Fix ownership and permissions
+        chown nobody:nogroup ${dest_file} 2>/dev/null || chown lsadm:lsadm ${dest_file}
+        chmod 644 ${dest_file}
+    "
+    
+    echo -e "[O] Template \033[32mdocker-local.conf\033[0m created successfully!"
+    echo -e "    SSL certificates path: /usr/local/lsws/conf/cert/\$VH_NAME/"
+    echo '[End] Creating docker-local.conf template'
+}
+
+# Function to register dockerLocal vhTemplate in httpd_config.conf
+register_local_template() {
+  echo '[Start] Registering vhTemplate: dockerLocal'
+
+  local config_file="/usr/local/lsws/conf/httpd_config.conf"
+  local template_name="dockerLocal"
+  local template_path="conf/templates/docker-local.conf"
+
+  docker compose exec -T ${CONT_NAME} bash -c "
+    if ! grep -q 'vhTemplate ${template_name} {' ${config_file}; then
+      cat >> ${config_file} <<EOF
+
+vhTemplate ${template_name} {
+  templateFile            ${template_path}
+  listeners               HTTP, HTTPS
+  note                    ${template_name}
+}
+EOF
+      echo '[✔] Template ${template_name} registered.'
+    else
+      echo '[i] Template ${template_name} already exists, skipped.'
+    fi
+  "
+
+  echo '[End] Registering vhTemplate complete.'
+}
+
+# Function to configure OpenLiteSpeed for local SSL
 configure_litespeed(){
-    echo '[Start] Configuring OpenLiteSpeed for domain'
+    echo '[Start] Configuring OpenLiteSpeed for local SSL'
     
     local cert_host_path="${CERT_DIR}/${DOMAIN}"
     
@@ -186,11 +272,18 @@ configure_litespeed(){
     # Define paths inside the container
     local lsws_conf_dir="/usr/local/lsws/conf"
     local httpd_conf="${lsws_conf_dir}/httpd_config.conf"
-    local vhosts_dir="${lsws_conf_dir}/vhosts"
     local cert_container_path="${lsws_conf_dir}/cert/${DOMAIN}"
 
-    # Find the Virtual Host name mapped to the domain
-    echo "[!] Searching for Virtual Host mapped to '${DOMAIN}'..."
+    # Step 1: Create docker-local.conf template if not exists
+    echo "[!] Step 1: Creating docker-local template..."
+    create_local_template
+    
+    # Step 2: Register dockerLocal vhTemplate in httpd_config.conf
+    echo "[!] Step 2: Registering dockerLocal template..."
+    register_local_template
+
+    # Step 3: Find the Virtual Host name mapped to the domain
+    echo "[!] Step 3: Searching for Virtual Host mapped to '${DOMAIN}'..."
     local vhost_name=$(docker compose exec -T ${CONT_NAME} bash -c "grep -B 2 'vhDomain.*${DOMAIN}' ${httpd_conf} | grep 'member' | awk '{print \$2}'" | tr -d '\r')
 
     if [ -z "${vhost_name}" ]; then
@@ -200,52 +293,136 @@ configure_litespeed(){
     fi
     echo "[O] Found Virtual Host member name: '${vhost_name}'"
 
-    local vhconf_path="${vhosts_dir}/${vhost_name}/vhconf.conf"
-
-    # Copy certificate files into the container
-    echo "[!] Copying certificates to container..."
+    # Step 4: Copy certificate files into the container
+    echo "[!] Step 4: Copying certificates to container..."
     docker compose exec -T ${CONT_NAME} bash -c "mkdir -p ${cert_container_path}"
     docker compose cp "${cert_host_path}/cert.pem" "${CONT_NAME}:${cert_container_path}/cert.pem"
     docker compose cp "${cert_host_path}/key.pem" "${CONT_NAME}:${cert_container_path}/key.pem"
-    echo "[O] Certificates copied to container at: ${cert_container_path}"
+    echo "[O] Certificates copied to: ${cert_container_path}"
 
-    # Modify the vhost configuration to enable SSL
-    echo "[!] Modifying vhost config: ${vhconf_path}"
+    # Step 5: Move domain from old template (docker) to new template (dockerLocal)
+    echo "[!] Step 5: Moving domain from 'docker' template to 'dockerLocal' template..."
     docker compose exec -T ${CONT_NAME} bash -c "
-        # Create vhconf.conf if it doesn't exist
-        if [ ! -f ${vhconf_path} ]; then
-            mkdir -p \$(dirname ${vhconf_path})
-            touch ${vhconf_path}
-            echo '[O] Created missing vhconf.conf file.'
-        fi
-
-        # Backup vhconf.conf
-        cp ${vhconf_path} ${vhconf_path}.backup.\$(date +%Y%m%d_%H%M%S)
-
-        # Remove existing vhssl block if present to avoid duplicates
-        sed -i '/vhssl[[:space:]]*{/,/}/d' ${vhconf_path}
-        sed -i '/^virtualHostConfig[[:space:]]*{/,/}/d' ${vhconf_path}
-
-        # Add new SSL configuration inside a virtualHostConfig block
-        cat >> ${vhconf_path} <<VHSSL_EOF
-vhssl {
-  keyFile                 ${cert_container_path}/key.pem
-  certFile                ${cert_container_path}/cert.pem
-  certChain               1
-}
-VHSSL_EOF
+        # Backup httpd_config.conf
+        cp ${httpd_conf} ${httpd_conf}.backup.\$(date +%Y%m%d_%H%M%S)
+        
+        # Find the member block for this vhost in 'docker' template
+        sed -i '/^vhTemplate docker {/,/^}/ {
+            /member ${vhost_name} {/,/}/d
+        }' ${httpd_conf}
+        
+        # Add the member to 'dockerLocal' template
+        # Find the last line of dockerLocal template and insert before it
+        sed -i '/^vhTemplate dockerLocal {/,/^}/ {
+            /^}/ i\  member ${vhost_name} {\n    vhDomain              ${DOMAIN},www.${DOMAIN}\n  }
+        }' ${httpd_conf}
     "
     
     if [ ${?} = 0 ]; then
-        echo -e "[O] SSL configured for vhost: \033[32m${vhost_name}\033[0m"
+        echo -e "[O] Domain '\033[32m${DOMAIN}\033[0m' moved to 'dockerLocal' template"
         echo "[!] Restarting OpenLiteSpeed to apply changes..."
         lsws_restart
     else
-        echo "[X] Failed to configure SSL for vhost"
+        echo "[X] Failed to move domain to dockerLocal template"
         exit 1
     fi
     
     echo '[End] Configuring OpenLiteSpeed'
+}
+
+# Function to remove SSL certificate and revert configuration
+remove_cert(){
+    echo '[Start] Removing SSL certificate'
+    
+    local cert_host_path="${CERT_DIR}/${DOMAIN}"
+    local lsws_conf_dir="/usr/local/lsws/conf"
+    local httpd_conf="${lsws_conf_dir}/httpd_config.conf"
+    local cert_container_path="${lsws_conf_dir}/cert/${DOMAIN}"
+    
+    # Step 1: Find Virtual Host name mapped to the domain
+    echo "[!] Step 1: Finding Virtual Host for domain '${DOMAIN}'..."
+    local vhost_name=$(docker compose exec -T ${CONT_NAME} bash -c "grep -B 2 'vhDomain.*${DOMAIN}' ${httpd_conf} | grep 'member' | awk '{print \$2}'" | tr -d '\r')
+    
+    if [ -z "${vhost_name}" ]; then
+        echo "[!] No Virtual Host found for domain '${DOMAIN}' in dockerLocal template"
+        echo "[!] Certificate may have already been removed or was never configured"
+    else
+        echo "[O] Found Virtual Host member name: '${vhost_name}'"
+        
+        # Step 2: Remove member from dockerLocal template
+        echo "[!] Step 2: Removing domain from 'dockerLocal' template..."
+        docker compose exec -T ${CONT_NAME} bash -c "
+            # Backup httpd_config.conf
+            cp ${httpd_conf} ${httpd_conf}.backup.\$(date +%Y%m%d_%H%M%S)
+            
+            # Remove the member block from dockerLocal template
+            sed -i '/^vhTemplate dockerLocal {/,/^}/ {
+                /member ${vhost_name} {/,/}/d
+            }' ${httpd_conf}
+            
+            # Add the member back to 'docker' template (without SSL)
+            sed -i '/^vhTemplate docker {/,/^}/ {
+                /^}/ i\  member ${vhost_name} {\n    vhDomain              ${DOMAIN},www.${DOMAIN}\n  }
+            }' ${httpd_conf}
+        "
+        
+        if [ ${?} = 0 ]; then
+            echo -e "[O] Domain '\033[32m${DOMAIN}\033[0m' moved back to 'docker' template"
+        else
+            echo "[X] Failed to move domain back to docker template"
+        fi
+    fi
+    
+    # Step 3: Remove certificate files from host
+    echo "[!] Step 3: Removing certificate files from host..."
+    if [ -d "${cert_host_path}" ]; then
+        rm -rf "${cert_host_path}"
+        echo -e "[O] Removed: ${cert_host_path}"
+    else
+        echo "[!] Certificate directory not found on host: ${cert_host_path}"
+    fi
+    
+    # Step 4: Remove certificate files from container
+    echo "[!] Step 4: Removing certificate files from container..."
+    docker compose exec -T ${CONT_NAME} bash -c "
+        if [ -d ${cert_container_path} ]; then
+            rm -rf ${cert_container_path}
+            echo '[O] Removed certificate directory from container: ${cert_container_path}'
+        else
+            echo '[!] Certificate directory not found in container'
+        fi
+    "
+    
+    # Step 5: Check if dockerLocal template is empty and remove if needed
+    echo "[!] Step 5: Checking if dockerLocal template has any members..."
+    local member_count=$(docker compose exec -T ${CONT_NAME} bash -c "grep -A 20 'vhTemplate dockerLocal' ${httpd_conf} | grep -c 'member'" | tr -d '\r')
+    
+    if [ "${member_count}" = "0" ]; then
+        echo "[!] dockerLocal template has no members, removing template..."
+        docker compose exec -T ${CONT_NAME} bash -c "
+            sed -i '/^vhTemplate dockerLocal {/,/^}/d' ${httpd_conf}
+        "
+        echo "[O] Removed empty dockerLocal template"
+        
+        # Also remove docker-local.conf template file
+        docker compose exec -T ${CONT_NAME} bash -c "
+            if [ -f ${lsws_conf_dir}/templates/docker-local.conf ]; then
+                rm ${lsws_conf_dir}/templates/docker-local.conf
+                echo '[O] Removed docker-local.conf template file'
+            fi
+        "
+    else
+        echo "[i] dockerLocal template still has ${member_count} member(s), keeping template"
+    fi
+    
+    # Step 6: Restart LiteSpeed
+    echo "[!] Step 6: Restarting OpenLiteSpeed..."
+    lsws_restart
+    
+    echo ""
+    echo -e "\033[1m[SUCCESS] Certificate removed for domain: ${DOMAIN}\033[0m"
+    echo ""
+    echo '[End] Removing SSL certificate'
 }
 
 # Function to restart the OpenLiteSpeed service inside a Docker container
@@ -259,112 +436,22 @@ lsws_restart() {
     fi
 }
 
-remove_cert(){
-    echo '[Start] Removing SSL certificate'
-    domain_filter "${DOMAIN}"
-    
-    CERT_FILE="${DOMAIN}+1.pem"
-    KEY_FILE="${DOMAIN}+1-key.pem"
-    LSWS_CONF_DIR="/usr/local/lsws/conf"
-    HTTPD_CONF="${LSWS_CONF_DIR}/httpd_config.conf"
-    
-    # 1. Xóa chứng chỉ trên host
-    if [ -f "${CERT_DIR}/${CERT_FILE}" ]; then
-        rm "${CERT_DIR}/${CERT_FILE}"
-        echo -e "[O] Removed: ${CERT_DIR}/${CERT_FILE}"
-    else
-        echo "[!] Certificate file not found: ${CERT_DIR}/${CERT_FILE}"
-    fi
-    
-    if [ -f "${CERT_DIR}/${KEY_FILE}" ]; then
-        rm "${CERT_DIR}/${KEY_FILE}"
-        echo -e "[O] Removed: ${CERT_DIR}/${KEY_FILE}"
-    else
-        echo "[!] Key file not found: ${CERT_DIR}/${KEY_FILE}"
-    fi
-    
-    # 2. Xóa chứng chỉ trong container
-    docker compose exec -T ${CONT_NAME} bash -c "
-        if [ -f ${LSWS_CONF_DIR}/cert/${CERT_FILE} ]; then
-            rm ${LSWS_CONF_DIR}/cert/${CERT_FILE}
-            echo '[O] Removed certificate from container'
-        fi
-        
-        if [ -f ${LSWS_CONF_DIR}/cert/${KEY_FILE} ]; then
-            rm ${LSWS_CONF_DIR}/cert/${KEY_FILE}
-            echo '[O] Removed key from container'
-        fi
-    "
-    
-    # 3. Xóa domain mapping khỏi SSL Listener
-    echo "[!] Removing domain mapping from SSL Listener..."
-    
-    HAS_MAPPING=$(docker compose exec -T ${CONT_NAME} bash -c "grep -c 'map.*${DOMAIN}' ${HTTPD_CONF}" | tr -d '\r')
-    
-    if [ "${HAS_MAPPING}" != "0" ]; then
-        # Backup trước khi xóa
-        docker compose exec -T ${CONT_NAME} bash -c "cp ${HTTPD_CONF} ${HTTPD_CONF}.backup.\$(date +%Y%m%d_%H%M%S)"
-        
-        # Xóa dòng map của domain
-        docker compose exec -T ${CONT_NAME} bash -c "
-            sed -i '/listener Default HTTPS/,/^}/ {
-                /map.*${DOMAIN}/d
-            }' ${HTTPD_CONF}
-        "
-        echo -e "[O] Removed domain mapping for: \033[32m${DOMAIN}\033[0m"
-        
-        # Kiểm tra xem còn domain nào được map không
-        REMAINING_MAPS=$(docker compose exec -T ${CONT_NAME} bash -c "grep -A 15 'listener Default HTTPS' ${HTTPD_CONF} | grep -c 'map'" | tr -d '\r')
-        
-        if [ "${REMAINING_MAPS}" = "0" ]; then
-            echo "[!] No more domains mapped to SSL Listener"
-            echo "[?] Do you want to remove the entire SSL Listener? (y/N)"
-            read -r REMOVE_LISTENER
-            
-            if [[ "${REMOVE_LISTENER}" =~ ^[Yy]$ ]]; then
-                docker compose exec -T ${CONT_NAME} bash -c "
-                    sed -i '/listener Default HTTPS {/,/^}/d' ${HTTPD_CONF}
-                "
-                echo "[O] SSL Listener removed"
-            fi
-        fi
-    else
-        echo "[!] Domain mapping not found in SSL Listener"
-    fi
-    
-    # 4. Hiển thị cấu hình hiện tại
-    echo ""
-    echo "[!] Current SSL Listener configuration:"
-    docker compose exec -T ${CONT_NAME} bash -c "grep -A 15 'listener Default HTTPS' ${HTTPD_CONF}" || echo "[!] No SSL Listener found"
-    echo ""
-    
-    # 5. Restart LiteSpeed
-    echo "[!] Restarting OpenLiteSpeed..."
-    lsws_restart
-    
-    echo ""
-    echo -e "\033[1m[SUCCESS] Certificate removed for domain: ${DOMAIN}\033[0m"
-    echo ""
-    echo '[End] Removing SSL certificate'
-}
-
+# Main function to orchestrate the script operations
 main(){
     if [ "${INSTALL}" = 'true' ]; then
         install_mkcert
         exit 0
     fi
-    
+
+    domain_filter "${DOMAIN}"
+
     if [ "${REMOVE}" = 'true' ]; then
         remove_cert
         exit 0
     fi
 
-    if [ "${TEST}" = 'true' ]; then
-        check_mkcert
-        exit 0
-    fi
-
     check_mkcert
+    domain_verify "${DOMAIN}"
     generate_cert
     configure_litespeed
 }
@@ -386,9 +473,6 @@ while [ ! -z "${1}" ]; do
             ;;
         -[rR] | --remove)
             REMOVE=true
-            ;;
-        -[tT] | --test) 
-            TEST=true
             ;;
         *) 
             help_message
