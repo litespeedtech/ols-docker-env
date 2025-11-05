@@ -92,7 +92,7 @@ check_mkcert() {
 install_mkcert() {
     echo "[Start] Installing mkcert..."
 
-    # 1️⃣ Check if mkcert is already installed
+    # Step 1 Check if mkcert is already installed
     if command -v mkcert.exe >/dev/null 2>&1 || command -v mkcert >/dev/null 2>&1; then
         echo "[O] mkcert is already installed."
         echo "[!] Ensuring local CA is installed..."
@@ -103,7 +103,7 @@ install_mkcert() {
         return 0
     fi
 
-    # 2️⃣ Check if Chocolatey is available
+    # Step 2 Check if Chocolatey is available
     if ! command -v choco.exe >/dev/null 2>&1 && ! command -v choco >/dev/null 2>&1; then
         echo "[X] Chocolatey not found!"
         echo "→ Please install Chocolatey from: https://chocolatey.org/install"
@@ -111,11 +111,11 @@ install_mkcert() {
         exit 1
     fi
 
-    # 3️⃣ Install mkcert using Chocolatey
+    # Step 3 Install mkcert using Chocolatey
     echo "[*] Installing mkcert via Chocolatey..."
     (choco.exe install mkcert -y || choco install mkcert -y)
 
-    # 4️⃣ Verify installation result
+    # Step 4 Verify installation result
     if command -v mkcert.exe >/dev/null 2>&1 || command -v mkcert >/dev/null 2>&1; then
         echo "[O] mkcert installed successfully."
         echo "[!] Creating local CA..."
