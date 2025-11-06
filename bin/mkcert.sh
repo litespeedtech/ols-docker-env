@@ -25,7 +25,8 @@ help_message(){
     echow '-I, --install'
     echo "${EPACE}${EPACE}Install mkcert on Windows (requires Chocolatey)"
     echow '-R, --remove'
-    echo "${EPACE}${EPACE}Remove certificate for a specific domain"
+    echo "${EPACE}${EPACE}Remove certificate for a specific domain. Must be used with --domain."
+    echo "${EPACE}${EPACE}Example: mkcert.sh --remove --domain example.test"
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit"
     exit 0
