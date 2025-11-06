@@ -6,14 +6,12 @@ CONT_NAME='litespeed'
 CERT_DIR='./certs'
 EPACE='        '
 
-# Function to print messages with a specific format
 echow(){
     FLAG=${1}
     shift
     echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
 }
 
-# Function to display help message
 help_message(){
     echo -e "\033[1mUSAGE\033[0m"
     echo "${EPACE}mkcert.sh [OPTIONS]"
@@ -32,14 +30,12 @@ help_message(){
     exit 0
 }
 
-# Function to check input parameters
 check_input(){
     if [ -z "${1}" ]; then
         help_message
     fi
 }
 
-# Function to filter and extract domain name
 domain_filter(){
     if [ -z "${1}" ]; then
         echo "[X] Domain name is required!"
@@ -52,7 +48,6 @@ domain_filter(){
     DOMAIN="${DOMAIN%%/*}"
 }
 
-# Function to get www version of the domain
 www_domain(){
     CHECK_WWW=$(echo ${1} | cut -c1-4)
     if [[ ${CHECK_WWW} == www. ]] ; then
@@ -63,11 +58,9 @@ www_domain(){
     WWW_DOMAIN="www.${DOMAIN}"
 }
 
-# Function to check if mkcert is installed
 check_mkcert() {
     echo "[Start] Checking mkcert installation..."
 
-    # Detect mkcert command (Windows supported, other OS can be added later)
     if MKCERT_CMD=$(command -v mkcert.exe 2>/dev/null || command -v mkcert 2>/dev/null); then
         echo "[✔] mkcert found at: ${MKCERT_CMD}"
     else
@@ -81,46 +74,59 @@ check_mkcert() {
     echo "[End] mkcert check completed."
 }
 
-# Function to install mkcert on Windows using Chocolatey
-# ------------------------------------------------------------------------------
-# 💡 Notes for contributors:
-#   - This script currently supports Windows / WSL / Git Bash only.
-#   - To extend for macOS or Linux, add logic below:
-#       macOS:  brew install mkcert nss
-#       Ubuntu: sudo apt install mkcert libnss3-tools
-#       Fedora: sudo dnf install mkcert nss-tools
-# ------------------------------------------------------------------------------
 install_mkcert() {
     echo "[Start] Installing mkcert..."
-
-    # Step 1 Check if mkcert is already installed
-    if command -v mkcert.exe >/dev/null 2>&1 || command -v mkcert >/dev/null 2>&1; then
+    case "$(uname -s)" in
+        Linux*)   OS="linux" ;;
+        Darwin*)  OS="mac" ;;
+        MINGW*|MSYS*|CYGWIN*|Windows*) OS="windows" ;;
+        *) echo "[X] Unsupported OS: $(uname -s)"; exit 1 ;;
+    esac
+    echo "[*] Detected OS: $OS"
+    if command -v mkcert >/dev/null 2>&1 || command -v mkcert.exe >/dev/null 2>&1; then
         echo "[O] mkcert is already installed."
         echo "[!] Ensuring local CA is installed..."
-        # Ensure local CA is installed
-        (mkcert.exe -install || mkcert -install)
+        (command -v mkcert.exe >/dev/null 2>&1 && mkcert.exe -install || mkcert -install)
         echo "[O] Local CA configured."
-        echo "[End] mkcert installation check complete."
         return 0
     fi
-
-    # Step 2 Check if Chocolatey is available
-    if ! command -v choco.exe >/dev/null 2>&1 && ! command -v choco >/dev/null 2>&1; then
-        echo "[X] Chocolatey not found!"
-        echo "→ Please install Chocolatey from: https://chocolatey.org/install"
-        echo "→ After installation, restart your terminal and re-run this script."
-        exit 1
-    fi
-
-    # Step 3 Install mkcert using Chocolatey
-    echo "[*] Installing mkcert via Chocolatey..."
-    (choco.exe install mkcert -y || choco install mkcert -y)
-
-    # Step 4 Verify installation result
-    if command -v mkcert.exe >/dev/null 2>&1 || command -v mkcert >/dev/null 2>&1; then
+    case "$OS" in
+        windows)
+            if ! command -v choco >/dev/null 2>&1 && ! command -v choco.exe >/dev/null 2>&1; then
+                echo "[X] Chocolatey not found!"
+                echo "Install it first: https://chocolatey.org/install"
+                exit 1
+            fi
+            choco install mkcert -y
+            ;;
+        mac)
+            if ! command -v brew >/dev/null 2>&1; then
+                echo "[X] Homebrew not found!"
+                echo "Install it from https://brew.sh/"
+                exit 1
+            fi
+            brew install mkcert nss
+            ;;
+        linux)
+            if command -v apt >/dev/null 2>&1; then
+                sudo apt update -y && sudo apt install -y mkcert libnss3-tools
+            elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y mkcert nss-tools
+            elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y mkcert nss-tools
+            elif command -v zypper >/dev/null 2>&1; then
+                sudo zypper install -y mkcert mozilla-nss-tools
+            else
+                echo "[X] Unsupported Linux distro. Install manually:"
+                echo "→ https://github.com/FiloSottile/mkcert"
+                exit 1
+            fi
+            ;;
+    esac
+    if command -v mkcert >/dev/null 2>&1 || command -v mkcert.exe >/dev/null 2>&1; then
         echo "[O] mkcert installed successfully."
         echo "[!] Creating local CA..."
-        (mkcert.exe -install || mkcert -install)
+        (command -v mkcert.exe >/dev/null 2>&1 && mkcert.exe -install || mkcert -install)
         echo "[O] Local CA configured."
         echo "[End] mkcert installation complete."
     else
@@ -129,7 +135,6 @@ install_mkcert() {
     fi
 }
 
-# Function to create certificate directory if it doesn't exist
 create_cert_dir(){
     if [ ! -d "${CERT_DIR}" ]; then
         echo "[!] Creating certificate directory: ${CERT_DIR}"
@@ -137,7 +142,6 @@ create_cert_dir(){
     fi
 }
 
-# Function to verify if domain has been added (by checking document root existence)
 domain_verify(){
     local domain="${1}"
     local doc_path="/var/www/vhosts/${domain}/html"
@@ -155,22 +159,15 @@ domain_verify(){
     fi
 }
 
-# Function to generate SSL certificate using mkcert
 generate_cert(){
     echo '[Start] Generating SSL certificate'
-    www_domain "${DOMAIN}"
-    
+    www_domain "${DOMAIN}"   
     create_cert_dir
-    
     mkdir -p "${CERT_DIR}/${DOMAIN}"
-
     cd "${CERT_DIR}/${DOMAIN}"
-    
     echo -e "[!] Generating certificate for: \033[32m${DOMAIN}\033[0m and \033[32m${WWW_DOMAIN}\033[0m"
     
-    # Use the detected mkcert command
     ${MKCERT_CMD} -key-file key.pem -cert-file cert.pem "${DOMAIN}" "${WWW_DOMAIN}" >/dev/null 2>&1
-    
     if [ ${?} = 0 ]; then
         echo -e "[O] Certificate generated successfully"
         echo "[!] Certificate files:"
@@ -182,26 +179,20 @@ generate_cert(){
         rm -rf "${CERT_DIR}/${DOMAIN}"
         exit 1
     fi
-    
     cd - > /dev/null
     echo '[End] Generating SSL certificate'
 }
 
-# Function to create docker-local.conf template for local development
 create_local_template(){
-    echo '[Start] Creating docker-local.conf template'
-    
+    echo '[Start] Creating docker-local.conf template'   
     local source_file="/usr/local/lsws/conf/templates/docker.conf"
     local dest_file="/usr/local/lsws/conf/templates/docker-local.conf"
-
-    # Check if template file already exists
     if docker compose exec -T ${CONT_NAME} bash -c "[ -f ${dest_file} ]" 2>/dev/null; then
         echo "[i] Template file already exists: ${dest_file}"
         echo '[End] Creating docker-local.conf template'
         return 0
     fi
     
-    # Copy and modify template file in a single command
     docker compose exec -T ${CONT_NAME} bash -c "
         # Copy template file
         cp ${source_file} ${dest_file}
@@ -229,15 +220,13 @@ VHSSL_EOF
     echo '[End] Creating docker-local.conf template'
 }
 
-# Function to register dockerLocal vhTemplate in httpd_config.conf
 register_local_template() {
-  echo '[Start] Registering vhTemplate: dockerLocal'
+    echo '[Start] Registering vhTemplate: dockerLocal'
+    local config_file="/usr/local/lsws/conf/httpd_config.conf"
+    local template_name="dockerLocal"
+    local template_path="conf/templates/docker-local.conf"
 
-  local config_file="/usr/local/lsws/conf/httpd_config.conf"
-  local template_name="dockerLocal"
-  local template_path="conf/templates/docker-local.conf"
-
-  docker compose exec -T ${CONT_NAME} bash -c "
+    docker compose exec -T ${CONT_NAME} bash -c "
     if ! grep -q 'vhTemplate ${template_name} {' ${config_file}; then
       cat >> ${config_file} <<EOF
 
@@ -253,37 +242,26 @@ EOF
     fi
   "
 
-  echo '[End] Registering vhTemplate complete.'
+    echo '[End] Registering vhTemplate complete.'
 }
 
-# Function to configure OpenLiteSpeed for local SSL
 configure_litespeed(){
     echo '[Start] Configuring OpenLiteSpeed for local SSL'
-    
     local cert_host_path="${CERT_DIR}/${DOMAIN}"
-    
-    # Check if certificate files exist
     if [ ! -f "${cert_host_path}/cert.pem" ] || [ ! -f "${cert_host_path}/key.pem" ]; then
         echo "[X] Certificate files not found on host at: ${cert_host_path}"
         exit 1
     fi
-    
     echo "[!] Configuring SSL for domain: ${DOMAIN}"
     
-    # Define paths inside the container
     local lsws_conf_dir="/usr/local/lsws/conf"
     local httpd_conf="${lsws_conf_dir}/httpd_config.conf"
     local cert_container_path="${lsws_conf_dir}/cert/${DOMAIN}"
 
-    # Step 1: Create docker-local.conf template if not exists
     echo "[!] Step 1: Creating docker-local template..."
     create_local_template
-    
-    # Step 2: Register dockerLocal vhTemplate in httpd_config.conf
     echo "[!] Step 2: Registering dockerLocal template..."
     register_local_template
-
-    # Step 3: Find the Virtual Host name mapped to the domain
     echo "[!] Step 3: Searching for Virtual Host mapped to '${DOMAIN}'..."
     local vhost_name=$(docker compose exec -T ${CONT_NAME} bash -c "grep -B 2 'vhDomain.*${DOMAIN}' ${httpd_conf} | grep 'member' | awk '{print \$2}'" | tr -d '\r')
 
@@ -293,15 +271,12 @@ configure_litespeed(){
         exit 1
     fi
     echo "[O] Found Virtual Host member name: '${vhost_name}'"
-
-    # Step 4: Copy certificate files into the container
     echo "[!] Step 4: Copying certificates to container..."
     docker compose exec -T ${CONT_NAME} bash -c "mkdir -p ${cert_container_path}"
     docker compose cp "${cert_host_path}/cert.pem" "${CONT_NAME}:${cert_container_path}/cert.pem"
     docker compose cp "${cert_host_path}/key.pem" "${CONT_NAME}:${cert_container_path}/key.pem"
     echo "[O] Certificates copied to: ${cert_container_path}"
 
-    # Step 5: Move domain from old template (docker) to new template (dockerLocal)
     echo "[!] Step 5: Moving domain from 'docker' template to 'dockerLocal' template..."
     docker compose exec -T ${CONT_NAME} bash -c "
         # Backup httpd_config.conf
@@ -331,7 +306,6 @@ configure_litespeed(){
     echo '[End] Configuring OpenLiteSpeed'
 }
 
-# Function to remove SSL certificate and revert configuration
 remove_cert(){
     echo '[Start] Removing SSL certificate'
     
@@ -340,7 +314,6 @@ remove_cert(){
     local httpd_conf="${lsws_conf_dir}/httpd_config.conf"
     local cert_container_path="${lsws_conf_dir}/cert/${DOMAIN}"
     
-    # Step 1: Find Virtual Host name mapped to the domain
     echo "[!] Step 1: Finding Virtual Host for domain '${DOMAIN}'..."
     local vhost_name=$(docker compose exec -T ${CONT_NAME} bash -c "grep -B 2 'vhDomain.*${DOMAIN}' ${httpd_conf} | grep 'member' | awk '{print \$2}'" | tr -d '\r')
     
@@ -350,7 +323,6 @@ remove_cert(){
     else
         echo "[O] Found Virtual Host member name: '${vhost_name}'"
         
-        # Step 2: Remove member from dockerLocal template
         echo "[!] Step 2: Removing domain from 'dockerLocal' template..."
         docker compose exec -T ${CONT_NAME} bash -c "
             # Backup httpd_config.conf
@@ -374,7 +346,6 @@ remove_cert(){
         fi
     fi
     
-    # Step 3: Remove certificate files from host
     echo "[!] Step 3: Removing certificate files from host..."
     if [ -d "${cert_host_path}" ]; then
         rm -rf "${cert_host_path}"
@@ -383,7 +354,6 @@ remove_cert(){
         echo "[!] Certificate directory not found on host: ${cert_host_path}"
     fi
     
-    # Step 4: Remove certificate files from container
     echo "[!] Step 4: Removing certificate files from container..."
     docker compose exec -T ${CONT_NAME} bash -c "
         if [ -d ${cert_container_path} ]; then
@@ -394,7 +364,6 @@ remove_cert(){
         fi
     "
     
-    # Step 5: Check if dockerLocal template is empty and remove if needed
     echo "[!] Step 5: Checking if dockerLocal template has any members..."
     local member_count=$(docker compose exec -T ${CONT_NAME} bash -c "grep -A 20 'vhTemplate dockerLocal' ${httpd_conf} | grep -c 'member'" | tr -d '\r')
     
@@ -405,7 +374,6 @@ remove_cert(){
         "
         echo "[O] Removed empty dockerLocal template"
         
-        # Also remove docker-local.conf template file
         docker compose exec -T ${CONT_NAME} bash -c "
             if [ -f ${lsws_conf_dir}/templates/docker-local.conf ]; then
                 rm ${lsws_conf_dir}/templates/docker-local.conf
@@ -416,7 +384,6 @@ remove_cert(){
         echo "[i] dockerLocal template still has ${member_count} member(s), keeping template"
     fi
     
-    # Step 6: Restart LiteSpeed
     echo "[!] Step 6: Restarting OpenLiteSpeed..."
     lsws_restart
     
@@ -426,7 +393,6 @@ remove_cert(){
     echo '[End] Removing SSL certificate'
 }
 
-# Function to restart the OpenLiteSpeed service inside a Docker container
 lsws_restart() {
     docker compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 
@@ -437,27 +403,22 @@ lsws_restart() {
     fi
 }
 
-# Main function to orchestrate the script operations
 main(){
     if [ "${INSTALL}" = 'true' ]; then
         install_mkcert
         exit 0
     fi
-
     domain_filter "${DOMAIN}"
-
     if [ "${REMOVE}" = 'true' ]; then
         remove_cert
         exit 0
     fi
-
     check_mkcert
     domain_verify "${DOMAIN}"
     generate_cert
     configure_litespeed
 }
 
-# Parse command-line arguments
 check_input ${1}
 while [ ! -z "${1}" ]; do
     case ${1} in

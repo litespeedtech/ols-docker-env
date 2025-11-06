@@ -222,12 +222,6 @@ This will:
 * Install `mkcert` via Chocolatey
 * Create and install a local Certificate Authority (CA) in your system trust store
 
-> **Note**: For macOS or Linux users, please install mkcert manually:
->
-> * macOS: `brew install mkcert nss`
-> * Ubuntu: `sudo apt install mkcert libnss3-tools`
-> * Fedora: `sudo dnf install mkcert nss-tools`
-
 #### Generating Local SSL Certificate
 
 After adding a domain to your environment, generate an SSL certificate:
