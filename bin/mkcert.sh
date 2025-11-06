@@ -271,13 +271,26 @@ configure_litespeed(){
         exit 1
     fi
     echo "[O] Found Virtual Host member name: '${vhost_name}'"
-    echo "[!] Step 4: Copying certificates to container..."
+
+    echo "[!] Step 4: Checking if domain is already configured for SSL..."
+    if docker compose exec -T ${CONT_NAME} bash -c "sed -n '/^vhTemplate dockerLocal {/,/^}/p' ${httpd_conf} | grep -q 'member ${vhost_name}'"; then
+        echo -e "[O] Domain '\033[32m${DOMAIN}\033[0m' is already in 'dockerLocal' template."
+        echo "[!] Updating certificates and restarting..."
+        docker compose exec -T ${CONT_NAME} bash -c "mkdir -p ${cert_container_path}"
+        docker compose cp "${cert_host_path}/cert.pem" "${CONT_NAME}:${cert_container_path}/cert.pem"
+        docker compose cp "${cert_host_path}/key.pem" "${CONT_NAME}:${cert_container_path}/key.pem"
+        lsws_restart
+        echo "[End] Configuration complete."
+        exit 0
+    fi
+
+    echo "[!] Step 5: Copying certificates to container..."
     docker compose exec -T ${CONT_NAME} bash -c "mkdir -p ${cert_container_path}"
     docker compose cp "${cert_host_path}/cert.pem" "${CONT_NAME}:${cert_container_path}/cert.pem"
     docker compose cp "${cert_host_path}/key.pem" "${CONT_NAME}:${cert_container_path}/key.pem"
     echo "[O] Certificates copied to: ${cert_container_path}"
 
-    echo "[!] Step 5: Moving domain from 'docker' template to 'dockerLocal' template..."
+    echo "[!] Step 6: Moving domain from 'docker' template to 'dockerLocal' template..."
     docker compose exec -T ${CONT_NAME} bash -c "
         # Backup httpd_config.conf
         cp ${httpd_conf} ${httpd_conf}.backup.\$(date +%Y%m%d_%H%M%S)
@@ -324,25 +337,29 @@ remove_cert(){
         echo "[O] Found Virtual Host member name: '${vhost_name}'"
         
         echo "[!] Step 2: Removing domain from 'dockerLocal' template..."
-        docker compose exec -T ${CONT_NAME} bash -c "
-            # Backup httpd_config.conf
-            cp ${httpd_conf} ${httpd_conf}.backup.\$(date +%Y%m%d_%H%M%S)
-            
-            # Remove the member block from dockerLocal template
-            sed -i '/^vhTemplate dockerLocal {/,/^}/ {
-                /member ${vhost_name} {/,/}/d
-            }' ${httpd_conf}
-            
-            # Add the member back to 'docker' template (without SSL)
-            sed -i '/^vhTemplate docker {/,/^}/ {
-                /^}/ i\  member ${vhost_name} {\n    vhDomain              ${DOMAIN},www.${DOMAIN}\n  }
-            }' ${httpd_conf}
-        "
-        
-        if [ ${?} = 0 ]; then
-            echo -e "[O] Domain '\033[32m${DOMAIN}\033[0m' moved back to 'docker' template"
+        if docker compose exec -T ${CONT_NAME} bash -c "sed -n '/^vhTemplate dockerLocal {/,/^}/p' ${httpd_conf} | grep -q 'member ${vhost_name}'"; then
+            echo "[O] Domain is configured for SSL. Moving it back to 'docker' template..."
+            docker compose exec -T ${CONT_NAME} bash -c "
+                # Backup httpd_config.conf
+                cp ${httpd_conf} ${httpd_conf}.backup.\$(date +%Y%m%d_%H%M%S)
+                
+                # Remove the member block from dockerLocal template
+                sed -i '/^vhTemplate dockerLocal {/,/^}/ {
+                    /member ${vhost_name} {/,/}/d
+                }' ${httpd_conf}
+                
+                # Add the member back to 'docker' template (without SSL)
+                sed -i '/^vhTemplate docker {/,/^}/ {
+                    /^}/ i\  member ${vhost_name} {\n    vhDomain              ${DOMAIN},www.${DOMAIN}\n  }
+                }' ${httpd_conf}
+            "
+            if [ ${?} = 0 ]; then
+                echo -e "[O] Domain '\033[32m${DOMAIN}\033[0m' moved back to 'docker' template"
+            else
+                echo "[X] Failed to move domain back to docker template"
+            fi
         else
-            echo "[X] Failed to move domain back to docker template"
+            echo "[!] Domain is not in 'dockerLocal' template. No configuration changes needed."
         fi
     fi
     
