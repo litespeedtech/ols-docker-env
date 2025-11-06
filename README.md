@@ -205,6 +205,66 @@ Other parameters:
 
 * [`-V`, `--remove`]: Remove a domain.
 
+### Using mkcert for Local Development SSL
+
+For local development domains (`.test`, `.local`, `.dev`, etc.), you can use `mkcert` to generate trusted SSL certificates without warnings.
+
+#### Installing mkcert
+
+First-time installation (Windows with Chocolatey):
+
+```bash
+bash bin/mkcert.sh --install
+```
+
+This will:
+
+* Install `mkcert` via Chocolatey
+* Create and install a local Certificate Authority (CA) in your system trust store
+
+> **Note**: For macOS or Linux users, please install mkcert manually:
+>
+> * macOS: `brew install mkcert nss`
+> * Ubuntu: `sudo apt install mkcert libnss3-tools`
+> * Fedora: `sudo dnf install mkcert nss-tools`
+
+#### Generating Local SSL Certificate
+
+After adding a domain to your environment, generate an SSL certificate:
+
+```bash
+bash bin/mkcert.sh [-D, --domain] example.test
+```
+
+This will:
+
+1. Check if the domain exists in your configuration
+2. Generate certificates for `example.test` and `www.example.test`
+3. Create a `dockerLocal` template with SSL configuration
+4. Copy certificates to the container
+5. Move the domain from the standard template to the SSL-enabled template
+6. Restart OpenLiteSpeed
+
+Your domain will now be accessible via HTTPS with a trusted certificate at `https://example.test`
+
+#### Removing Local SSL Certificate
+
+To remove the SSL certificate and revert to HTTP:
+
+```bash
+bash bin/mkcert.sh [-R, --remove] [-D, --domain] example.test
+```
+
+This will:
+
+1. Remove the domain from the `dockerLocal` template
+2. Move it back to the standard `docker` template
+3. Delete certificate files from both host and container
+4. Clean up empty templates if no other domains use SSL
+5. Restart OpenLiteSpeed
+
+> **Important**: You must add the domain to your environment first using `bash bin/domain.sh --add example.test` before generating certificates.
+
 ### Update Web Server
 
 To upgrade the web server to latest stable version, run the following:
