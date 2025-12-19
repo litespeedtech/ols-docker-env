@@ -76,11 +76,15 @@ domain_filter(){
 }
 
 email_filter(){
+    local EMAIL_CLEAN="${1%\"}"
+    EMAIL_CLEAN="${EMAIL_CLEAN#\"}"
+
     CKREG="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?\$"
-    if [[ "${1}" =~ ${CKREG} ]] ; then
-        echo -e "[O] The E-mail \033[32m${1}\033[0m is valid."
+
+    if [[ "${EMAIL_CLEAN}" =~ ${CKREG} ]]; then
+        echo -e "[O] The E-mail \033[32m${EMAIL_CLEAN}\033[0m is valid."
     else
-        echo -e "[X] The E-mail \e[31m${1}\e[39m is invalid"
+        echo -e "[X] The E-mail \e[31m${EMAIL_CLEAN}\e[39m is invalid"
         exit 1
     fi
 }
@@ -122,14 +126,24 @@ domain_verify(){
 install_acme(){
     echo '[Start] Install ACME'
     if [ "${1}" = 'true' ]; then
-        docker compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
-        ./acme.sh --install --cert-home  ~/.acme.sh/certs; \
-        rm ~/acme.sh"
+        docker compose exec litespeed su -c "
+            cd &&
+            wget ${ACME_SRC} &&
+            chmod 755 acme.sh &&
+            ./acme.sh --install --cert-home ~/.acme.sh/certs &&
+            /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt &&
+            rm ~/acme.sh
+        "
     elif [ "${2}" != '' ]; then
-        email_filter "${2}"
-        docker compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
-        ./acme.sh --install --cert-home  ~/.acme.sh/certs --accountemail  ${2}; \
-        rm ~/acme.sh"
+        email_filter \"${2}\"
+        docker compose exec litespeed su -c "
+            cd &&
+            wget ${ACME_SRC} &&
+            chmod 755 acme.sh &&
+            ./acme.sh --install --cert-home ~/.acme.sh/certs --accountemail ${2} &&
+            /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt &&
+            rm ~/acme.sh
+        "
     else
         help_message 1
         exit 1
