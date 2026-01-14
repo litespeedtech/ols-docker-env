@@ -5,15 +5,23 @@ services:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - "./data/db:/var/lib/mariadb:delegated"  # ✅ FIXED: mysql → mariadb
+      - "./data/db:/var/lib/mariadb:delegated"
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_AUTO_UPGRADE: "1"           # ✅ Auto-creates healthcheck user
     restart: always
+    healthcheck:                          # ✅ OFFICIAL MariaDB healthcheck
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 80s                   # ✅ Gives 80s for full MariaDB init
     networks:
       - default
+
   litespeed:
     image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
     container_name: litespeed
@@ -36,6 +44,7 @@ services:
       TZ: ${TimeZone}
     networks:
       - default
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
     env_file:
@@ -47,6 +56,7 @@ services:
     restart: always
     networks:
       - default
+
   redis:
     image: "redis:alpine"
     logging:
@@ -60,6 +70,7 @@ services:
     restart: always
     networks:
       - default
+
 networks:
   default:
     driver: bridge
