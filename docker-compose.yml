@@ -5,20 +5,20 @@ services:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - "./data/db:/var/lib/mariadb:delegated"
+      - mariadb_data:/var/lib/mysql          # ✅ CORRECT PATH
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_AUTO_UPGRADE: "1"           # ← NEW
+      MARIADB_AUTO_UPGRADE: "1"
     restart: always
-    healthcheck:                          # ← NEW BLOCK
+    healthcheck:
       test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
       interval: 30s
       timeout: 10s
       retries: 20
-      start_period: 80s                   # ← NEW: 80s MariaDB init
+      start_period: 80s
     networks:
       - default
 
@@ -44,6 +44,9 @@ services:
       TZ: ${TimeZone}
     networks:
       - default
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
@@ -56,6 +59,9 @@ services:
     restart: always
     networks:
       - default
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   redis:
     image: "redis:alpine"
@@ -69,6 +75,9 @@ services:
     restart: always
     networks:
       - default
+
+volumes:
+  mariadb_data:                            # Docker creates with mysql:999 ownership
 
 networks:
   default:
