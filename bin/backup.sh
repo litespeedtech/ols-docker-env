@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+source .env
+
 DOMAIN=$1
 NOTE=${2:-""}
 
@@ -9,6 +11,9 @@ if [[ ! -t 0 && -n "$CRON_BACKUP" ]]; then
   IS_CRON=true
 fi
 
+# BACKUP_ROOT comes from .env, fallback to ./backups if not set
+BACKUP_ROOT="${BACKUP_ROOT:-./backups}"
+
 DATE_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 SUFFIX=${IS_CRON:+"_cron"}
 
@@ -18,12 +23,12 @@ else
   FOLDER_NAME="${DATE_TIME}${SUFFIX}"
 fi
 
-BACKUP_DIR="./backups/${DOMAIN}/${FOLDER_NAME}"
+BACKUP_DIR="${BACKUP_ROOT}/${DOMAIN}/${FOLDER_NAME}"
 mkdir -p "$BACKUP_DIR"
 
 echo "🔄 Backing up ${DOMAIN} → ${BACKUP_DIR}"
 
-# Get target database name from wp-config or env
+# Get target database name from wp-config or env (same as demosite.sh pattern)
 TARGET_DB=$(grep DB_NAME ./sites/${DOMAIN}/wp-config.php 2>/dev/null | cut -d\' -f4 || echo $MYSQL_DATABASE)
 
 if [[ -z "$TARGET_DB" ]]; then
@@ -70,7 +75,7 @@ echo "🧹 Pruning backups..."
 if [[ "$IS_CRON" == true ]]; then
   echo "   📅 Cron mode: Keeping last 30 backups"
   # Cron: Keep newest 30 cron backups only (excludes safety)
-  find "./backups/${DOMAIN}" -maxdepth 1 -type d \
+  find "${BACKUP_ROOT}/${DOMAIN}" -maxdepth 1 -type d \
     \( -name "*_cron*" ! -name "*Pre-Restore-AutoSave*" ! -name "*Pre-Copy-AutoSave*" \) | \
     sort -r | tail -n +31 | xargs rm -rf 2>/dev/null || true
 else
@@ -78,7 +83,7 @@ else
 fi
 
 # ALWAYS protect ALL safety backups (both modes)
-find "./backups/${DOMAIN}" -maxdepth 1 -type d \
+find "${BACKUP_ROOT}/${DOMAIN}" -maxdepth 1 -type d \
   \( -name "*Pre-Restore-AutoSave*" -o -name "*Pre-Copy-AutoSave*" \) | \
   sort -r | tail -n +999 | xargs rm -rf 2>/dev/null || true
 
