@@ -11,14 +11,14 @@ services:
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_AUTO_UPGRADE: "1"           # ✅ Auto-creates healthcheck user
+      MARIADB_AUTO_UPGRADE: "1"           # ← NEW
     restart: always
-    healthcheck:                          # ✅ OFFICIAL MariaDB healthcheck
+    healthcheck:                          # ← NEW BLOCK
       test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
       interval: 30s
       timeout: 10s
       retries: 20
-      start_period: 80s                   # ✅ Gives 80s for full MariaDB init
+      start_period: 80s                   # ← NEW: 80s MariaDB init
     networks:
       - default
 
@@ -61,7 +61,6 @@ services:
     image: "redis:alpine"
     logging:
       driver: none
-    # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
