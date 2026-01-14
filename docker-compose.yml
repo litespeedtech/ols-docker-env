@@ -69,7 +69,7 @@ services:
     ports:
       - 8080:80
     environment:
-      PMA_HOST: mariadb
+      PMA_HOST: mysql
     restart: always
     networks:
       - default
