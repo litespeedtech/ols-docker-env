@@ -1,6 +1,6 @@
 services:
-  mysql:
-    image: mariadb:11.4
+  mariadb:
+    image: mariadb:11.8
     logging:
       driver: none
     command: ["--max-allowed-packet=512M"]
@@ -43,7 +43,7 @@ services:
     ports:
       - 8080:80
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: mariadb
     restart: always
     networks:
       - default
