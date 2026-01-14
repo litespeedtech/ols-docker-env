@@ -29,7 +29,7 @@ mkdir -p "$BACKUP_DIR"
 echo "🔄 Backing up ${DOMAIN} → ${BACKUP_DIR}"
 
 # Get target database name from wp-config or env (same as demosite.sh pattern)
-TARGET_DB=$(grep DB_NAME ./sites/${DOMAIN}/wp-config.php 2>/dev/null | cut -d\' -f4 || echo $MYSQL_DATABASE)
+TARGET_DB=$(grep DB_NAME ./sites/${DOMAIN}/wp-config.php 2>/dev/null | cut -d\' -f4 || echo ${MARIADB_DATABASE}
 
 if [[ -z "$TARGET_DB" ]]; then
   echo "❌ Could not determine database for ${DOMAIN}"
@@ -38,7 +38,7 @@ fi
 
 # 1. Database backup (with progress)
 echo "📥 Dumping database ${TARGET_DB}..."
-docker exec mariadb mysqldump "$TARGET_DB" | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
+docker exec mariadb mariadb-dump "$TARGET_DB" | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
 
 # 2. Site files backup (with progress)
 echo "📁 Archiving site files..."
@@ -89,3 +89,4 @@ find "${BACKUP_ROOT}/${DOMAIN}" -maxdepth 1 -type d \
 
 echo "✅ Backup complete: ${BACKUP_DIR}"
 echo "   📋 Restore with: ./bin/restore.sh ${DOMAIN} ${FOLDER_NAME##*/}"
+
