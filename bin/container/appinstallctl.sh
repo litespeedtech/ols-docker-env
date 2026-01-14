@@ -8,7 +8,7 @@ WWW_UID=''
 WWW_GID=''
 WPCONSTCONF=''
 PUB_IP=$(curl -s http://checkip.amazonaws.com)
-DB_HOST='mysql'
+DB_HOST='mariadb'
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
 EPACE='        '
@@ -92,16 +92,16 @@ set_vh_docroot(){
 	fi	
 }
 
-check_sql_native(){
+check_mariadb_native(){
 	local COUNTER=0
 	local LIMIT_NUM=100
-	until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
+	until [ "$(curl -v mariadb:3306 2>&1 | grep -i 'native\|Connected')" ]; do
 		echo "Counter: ${COUNTER}/${LIMIT_NUM}"
 		COUNTER=$((COUNTER+1))
 		if [ ${COUNTER} = 10 ]; then
-			echo '--- MySQL is starting, please wait... ---'
+			echo '--- MariaDB is starting, please wait... ---'
 		elif [ ${COUNTER} = ${LIMIT_NUM} ]; then	
-			echo '--- MySQL is timeout, exit! ---'
+			echo '--- MariaDB is timeout, exit! ---'
 			exit 1
 		fi
 		sleep 1
@@ -160,9 +160,9 @@ set_lscache(){
         cat >> "${THEME_PATH}/functions.php" <<END
 <?php
 require_once( WP_CONTENT_DIR.'/../wp-admin/includes/plugin.php' );
-\$path = 'litespeed-cache/litespeed-cache.php' ;
-if (!is_plugin_active( \$path )) {
-    activate_plugin( \$path ) ;
+$path = 'litespeed-cache/litespeed-cache.php' ;
+if (!is_plugin_active( $path )) {
+    activate_plugin( $path ) ;
     rename( __FILE__ . '.bk', __FILE__ );
 }
 END
@@ -172,9 +172,9 @@ END
         ed ${THEME_PATH}/functions.php << END >>/dev/null 2>&1
 2i
 require_once( WP_CONTENT_DIR.'/../wp-admin/includes/plugin.php' );
-\$path = 'litespeed-cache/litespeed-cache.php' ;
-if (!is_plugin_active( \$path )) {
-    activate_plugin( \$path ) ;
+$path = 'litespeed-cache/litespeed-cache.php' ;
+if (!is_plugin_active( $path )) {
+    activate_plugin( $path ) ;
     rename( __FILE__ . '.bk', __FILE__ );
 }
 .
@@ -234,7 +234,7 @@ main(){
 	get_owner
 	cd ${VH_DOC_ROOT}
 	if [ "${APP_NAME}" = 'wordpress' ] || [ "${APP_NAME}" = 'wp' ]; then
-		check_sql_native
+		check_mariadb_native
 		app_wordpress_dl
 		preinstall_wordpress
 		install_wp_plugin
