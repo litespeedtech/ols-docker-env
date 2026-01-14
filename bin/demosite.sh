@@ -49,11 +49,11 @@ gen_root_fd(){
 }
 
 create_db(){
-    if [ ! -n "${MYSQL_DATABASE}" ] || [ ! -n "${MYSQL_USER}" ] || [ ! -n "${MYSQL_PASSWORD}" ]; then
+    if [ ! -n "${MARIADB_DATABASE}" ] || [ ! -n "${MARIADB_USER}" ] || [ ! -n "${MARIADB_PASSWORD}" ]; then
         echo "Parameters not supplied, please check!"
         exit 1
     else    
-        bash bin/database.sh -D ${1} -U ${MYSQL_USER} -P ${MYSQL_PASSWORD} -DB ${MYSQL_DATABASE}
+        bash bin/database.sh -D ${1} -U ${MARIADB_USER} -P ${MARIADB_PASSWORD} -DB ${MARIADB_DATABASE}
     fi    
 }    
 
@@ -63,9 +63,9 @@ store_credential(){
     else
         echo 'Storing database parameter'
         cat > "${DOC_FD}/.db_pass" << EOT
-"Database":"${MYSQL_DATABASE}"
-"Username":"${MYSQL_USER}"
-"Password":"$(echo ${MYSQL_PASSWORD} | tr -d "'")"
+"Database":"${MARIADB_DATABASE}"
+"Username":"${MARIADB_USER}"
+"Password":"$(echo ${MARIADB_PASSWORD} | tr -d "'")"
 EOT
     fi
 }
