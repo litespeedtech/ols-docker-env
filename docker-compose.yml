@@ -72,7 +72,9 @@ services:
     ports:
       - 8080:80
     environment:
-      PMA_HOST: mariadb                        # Updated from mysql
+      PMA_HOST: mariadb
+      # Bonus: Password compatibility (matches script logic)
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
     restart: always
     networks:
       - default
