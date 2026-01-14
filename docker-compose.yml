@@ -1,11 +1,12 @@
 services:
-  mariadb:                                    # 1st: Must be FIRST
-    image: mariadb:11.8                       # Forces 11.8
+  mariadb:
+    image: mariadb@sha256:1cac8492bd78b1ec693238dc600be173397efd7b55eabc725abc281dc855b482
+    #                 ↑ 11.8 DIGEST LOCKED - IMPOSSIBLE to get wrong version
     logging:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - mariadb_data:/var/lib/mysql           # ✅ Official path
+      - mariadb_data:/var/lib/mysql
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE}
@@ -59,7 +60,7 @@ services:
       - default
     depends_on:
       mariadb:
-        condition: service_healthy              # ✅ Now valid
+        condition: service_healthy
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
@@ -74,7 +75,7 @@ services:
       - default
     depends_on:
       mariadb:
-        condition: service_healthy              # ✅ Now valid
+        condition: service_healthy
 
 volumes:
   mariadb_data:
