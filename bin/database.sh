@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 source .env
-
 DOMAIN=''
 SQL_DB=''
 SQL_USER=''
