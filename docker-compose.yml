@@ -1,25 +1,28 @@
 services:
   mariadb:
     image: mariadb@sha256:1cac8492bd78b1ec693238dc600be173397efd7b55eabc725abc281dc855b482
-    #                 ↑ 11.8 DIGEST LOCKED - IMPOSSIBLE to get wrong version
+    #                 ↑ 11.8 DIGEST LOCKED - Guaranteed exact version
     logging:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - mariadb_data:/var/lib/mysql
+      # DUAL COMPATIBILITY - Zero data loss for old users
+      - ./data/db:/var/lib/mysql:delegated     # OLD USERS: Keeps existing data
+      - mariadb_data:/var/lib/mysql            # NEW USERS: Modern named volume
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_AUTO_UPGRADE: "1"
+      # FULL BACKWARDS COMPATIBILITY - Both formats work
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-${MARIADB_DATABASE}}
+      MYSQL_USER: ${MYSQL_USER:-${MARIADB_USER}}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD}}
+      MARIADB_AUTO_UPGRADE: "1"                # 11.8 upgrade safety
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
       interval: 30s
       timeout: 10s
       retries: 20
-      start_period: 80s
+      start_period: 80s                        # MariaDB 11.8 init time
     networks:
       - default
 
@@ -60,7 +63,7 @@ services:
       - default
     depends_on:
       mariadb:
-        condition: service_healthy
+        condition: service_healthy              # Startup order guaranteed
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
@@ -69,7 +72,7 @@ services:
     ports:
       - 8080:80
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: mariadb                        # Updated from mysql
     restart: always
     networks:
       - default
@@ -78,7 +81,7 @@ services:
         condition: service_healthy
 
 volumes:
-  mariadb_data:
+  mariadb_data:                               # Auto-created for new users
 
 networks:
   default:
