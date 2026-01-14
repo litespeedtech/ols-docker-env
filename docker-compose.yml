@@ -1,11 +1,11 @@
 services:
-  mariadb:
-    image: mariadb:11.8
+  mariadb:                                    # 1st: Must be FIRST
+    image: mariadb:11.8                       # Forces 11.8
     logging:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      - mariadb_data:/var/lib/mysql          # ✅ CORRECT PATH
+      - mariadb_data:/var/lib/mysql           # ✅ Official path
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE}
@@ -19,6 +19,19 @@ services:
       timeout: 10s
       retries: 20
       start_period: 80s
+    networks:
+      - default
+
+  redis:
+    image: "redis:alpine"
+    logging:
+      driver: none
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    restart: always
     networks:
       - default
 
@@ -46,7 +59,7 @@ services:
       - default
     depends_on:
       mariadb:
-        condition: service_healthy
+        condition: service_healthy              # ✅ Now valid
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
@@ -61,23 +74,10 @@ services:
       - default
     depends_on:
       mariadb:
-        condition: service_healthy
-
-  redis:
-    image: "redis:alpine"
-    logging:
-      driver: none
-    volumes:
-      - ./redis/data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    environment:
-      - REDIS_REPLICATION_MODE=master
-    restart: always
-    networks:
-      - default
+        condition: service_healthy              # ✅ Now valid
 
 volumes:
-  mariadb_data:                            # Docker creates with mysql:999 ownership
+  mariadb_data:
 
 networks:
   default:
