@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source .env
 
 DOMAIN=''
 SQL_DB=''
