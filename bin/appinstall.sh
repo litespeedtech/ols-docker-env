@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+source .env 2>/dev/null || true
+
+# VOLUME DETECTION (V1 default for legacy, V2 for new)
+if [ -d "./data/db" ]; then
+    COMPOSE_CMD="docker-compose"
+    echo "✅ Legacy volume → docker-compose mode" >&2
+else
+    COMPOSE_CMD="docker compose"
+    echo "🚀 Fresh install → docker compose mode" >&2
+fi
+
 APP_NAME=''
 DOMAIN=''
 EPACE='        '
@@ -27,7 +38,7 @@ check_input(){
 }
 
 app_download(){
-    docker compose exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
+    ${COMPOSE_CMD} exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
     bash bin/webadmin.sh -r
     exit 0
 }
