@@ -1,4 +1,21 @@
 #!/bin/bash
+set -e  # Exit on error
+
+# Source .env FIRST (with fallbacks)
+if [ -f .env ]; then
+  source .env
+fi
+
+# ✅ FALLBACKS: Use .env OR defaults (ALL CAPS .env vars)
+backup_root="${BACKUP_ROOT:-./backups}"
+MYSQL_DATABASE="${MYSQL_DATABASE:-wordpress}"
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-}"
+
+# Warn if critical vars missing (don't crash)
+if [[ -z "$MYSQL_ROOT_PASSWORD" ]]; then
+  echo "⚠️  No MYSQL_ROOT_PASSWORD - cross-domain restore limited"
+fi
+
 DOMAIN=$1
 TIMESTAMP=${2:-latest}
 SOURCE_DOMAIN=${3:-}  # Optional cross-domain source
@@ -16,10 +33,10 @@ fi
 
 # Use source domain for backups if provided
 BACKUP_DOMAIN=${SOURCE_DOMAIN:-$DOMAIN}
-BACKUP_DIR="./backups/${BACKUP_DOMAIN}"
+BACKUP_DIR="${backup_root}/${BACKUP_DOMAIN}"
 
 if [[ ! -d "${BACKUP_DIR}" ]]; then
-  echo "❌ No backups found for ${BACKUP_DOMAIN}"
+  echo "❌ No backups found for ${BACKUP_DOMAIN} in ${BACKUP_ROOT:-./backups}"
   exit 1
 fi
 
@@ -27,19 +44,15 @@ fi
 resolve_timestamp() {
   case "$TIMESTAMP" in
     "latest")
-      # Latest NON-SAFETY backup (excludes ALL auto-saves)
       ls -t "${BACKUP_DIR}" | grep -vE "(Pre-Restore-AutoSave|Pre-Copy-AutoSave)" | head -n1
       ;;
     "autosave")
-      # ALL safety backups (both restore + copy autosaves)
       ls -t "${BACKUP_DIR}" | grep -E "(Pre-Restore-AutoSave|Pre-Copy-AutoSave)" | head -n1
       ;;
     "precopy")
-      # Most recent Pre-Copy-AutoSave only
       ls -t "${BACKUP_DIR}" | grep "Pre-Copy-AutoSave" | head -n1
       ;;
     *)
-      # Specific timestamp provided
       echo "$TIMESTAMP"
       ;;
   esac
@@ -67,17 +80,23 @@ echo "🔄 Restoring ${DOMAIN} from ${BACKUP_DOMAIN}:${TIMESTAMP}..."
 echo "💾 Auto-saving current state..."
 bash "$(dirname "$0")/backup.sh" "${DOMAIN}" "Pre-Restore-AutoSave"
 
-# 1. Get target database name (read from wp-config.php or use env)
-TARGET_DB=$(grep DB_NAME ./sites/${DOMAIN}/wp-config.php 2>/dev/null | cut -d\' -f4 || echo $MYSQL_DATABASE)
+# 1. Get target database name + DB container
+TARGET_DB=$(grep DB_NAME ./sites/${DOMAIN}/wp-config.php 2>/dev/null | cut -d\' -f4 || echo "${MYSQL_DATABASE}")
+DB_CONTAINER=$(docker ps --filter "name=mariadb" --format "{{.Names}}" | head -n1)
 
 if [[ -z "$TARGET_DB" ]]; then
   echo "❌ Could not determine target database"
   exit 1
 fi
 
-# 2. Restore database to target domain's DB
+if [[ -z "$DB_CONTAINER" ]]; then
+  echo "❌ MariaDB container not running"
+  exit 1
+fi
+
+# 2. Restore database ✅ mariadb + --force
 echo "📥 Restoring database to ${TARGET_DB}..."
-gunzip -c "${DB_FILE}" | docker exec -i mariadb mysql "$TARGET_DB"
+gunzip -c "${DB_FILE}" | docker exec -i "${DB_CONTAINER}" mariadb "${TARGET_DB}" --force
 
 # 3. Safety backup of existing site
 echo "📂 Preserving existing site..."
@@ -97,41 +116,41 @@ chmod -R 755 ./sites/${DOMAIN}
 if [[ "$BACKUP_DOMAIN" != "$DOMAIN" ]]; then
   echo "🌐 Setting up vhost + database for new domain ${DOMAIN}..."
   
-  # Create new DB for target domain
   NEW_DB="${MYSQL_DATABASE}_${DOMAIN//./_}"
-  docker exec -i mariadb mysql -u root -p${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS \`${NEW_DB}\`;"
-  
-  # Update wp-config.php for new DB
-  sed -i "s/DB_NAME.*=.*/DB_NAME = '${NEW_DB}';/" ./sites/${DOMAIN}/wp-config.php
-  
-  # Update site URLs in database
-  docker exec -i mariadb mysql "$NEW_DB" -e "
-    UPDATE wp_options SET option_value = REPLACE(option_value, '${BACKUP_DOMAIN}', '${DOMAIN}') WHERE option_name = 'home' OR option_name = 'siteurl';
-    UPDATE wp_posts SET guid = REPLACE(guid, '${BACKUP_DOMAIN}','${DOMAIN}');
-    UPDATE wp_posts SET post_content = REPLACE(post_content, '${BACKUP_DOMAIN}', '${DOMAIN}');
-    UPDATE wp_postmeta SET meta_value = REPLACE(meta_value,'${BACKUP_DOMAIN}','${DOMAIN}');
-  "
-  
-  # Run existing bin scripts
-  MYSQL_DATABASE=${NEW_DB} bash "$(dirname "$0")/database.sh" "${DOMAIN}"
-  bash "$(dirname "$0")/domain.sh" --add "${DOMAIN}"
-  
-  echo "✅ Vhost + DB created for ${DOMAIN}"
+  if [[ -n "$MYSQL_ROOT_PASSWORD" ]]; then
+    docker exec -i "${DB_CONTAINER}" mariadb -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${NEW_DB}\`;"
+    
+    sed -i "s/DB_NAME.*=.*/DB_NAME = '${NEW_DB}';/" ./sites/${DOMAIN}/wp-config.php
+    
+    docker exec -i "${DB_CONTAINER}" mariadb "${NEW_DB}" -e "
+      UPDATE wp_options SET option_value = REPLACE(option_value, '${BACKUP_DOMAIN}', '${DOMAIN}') WHERE option_name = 'home' OR option_name = 'siteurl';
+      UPDATE wp_posts SET guid = REPLACE(guid, '${BACKUP_DOMAIN}','${DOMAIN}');
+      UPDATE wp_posts SET post_content = REPLACE(post_content, '${BACKUP_DOMAIN}', '${DOMAIN}');
+      UPDATE wp_postmeta SET meta_value = REPLACE(meta_value,'${BACKUP_DOMAIN}','${DOMAIN}');
+    "
+    
+    MYSQL_DATABASE=${NEW_DB} bash "$(dirname "$0")/database.sh" "${DOMAIN}"
+    bash "$(dirname "$0")/domain.sh" --add "${DOMAIN}"
+    echo "✅ Vhost + DB created for ${DOMAIN}"
+  else
+    echo "❌ Cross-domain restore requires MYSQL_ROOT_PASSWORD in .env"
+    exit 1
+  fi
 fi
 
 # 🔥 POST-RESTORE OPTIMIZATION
 echo "⚡ Running post-restore optimization..."
-docker exec -i mariadb mysql "$TARGET_DB" -e "
+docker exec -i "${DB_CONTAINER}" mariadb "${TARGET_DB}" -e "
   OPTIMIZE TABLE wp_posts;
   OPTIMIZE TABLE wp_postmeta;
   OPTIMIZE TABLE wp_options;
 "
 
-# Clear any caches
+# Clear caches
 echo "🧹 Clearing caches..."
 rm -rf ./sites/${DOMAIN}/wp-content/cache/* 2>/dev/null || true
 
 echo "✅ Restore complete: http://${DOMAIN}"
-echo "   💾 Auto-backup created: ./backups/${DOMAIN}/[timestamp]_Pre-Restore-AutoSave/"
+echo "   💾 Auto-backup: ${BACKUP_ROOT:-./backups}/${DOMAIN}/[timestamp]_Pre-Restore-AutoSave/"
 echo "   📁 Restored from: ${RESTORE_PATH}"
-echo "   📂 Previous site saved: ./sites/${DOMAIN}_pre_restore/"
+echo "   📂 Previous site: ./sites/${DOMAIN}_pre_restore/"
