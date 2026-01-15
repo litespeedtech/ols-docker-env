@@ -76,8 +76,8 @@ echo "🔄 Restoring ${DOMAIN} from ${BACKUP_DOMAIN}:${TIMESTAMP}..."
 echo "💾 Auto-saving current state..."
 bash "$(dirname "$0")/backup.sh" "${DOMAIN}" "Pre-Restore-AutoSave"
 
-# FIXED: Hardcode mariadb service + correct mysql client
-DB_CONTAINER="mariadb"
+# FIXED: Hardcode mysql service + correct mysql client
+DB_CONTAINER="mysql"
 TARGET_DB=$(grep "DB_NAME" "./sites/${DOMAIN}/wp-config.php" 2>/dev/null | cut -d\' -f4 || echo "${MARIADB_DATABASE}")
 
 [[ -z "$TARGET_DB" ]] && { echo "❌ Could not determine target database"; exit 1; }

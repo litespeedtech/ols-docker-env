@@ -1,22 +1,21 @@
 version: '3.8'
 
 services:
-  mariadb:
-    image: ${MARIADB_IMAGE:-mariadb:lts-noble}
+  mysql:
+    image: mariadb:11.4
     logging:
       driver: none
-    command: ["--max-allowed-packet=${MARIADB_PACKET_SIZE:-64M}"]
+    command: ["--max-allowed-packet=512M"]
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - "./data/db:/var/lib/mysql:delegated"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-${MARIADB_DATABASE}}
-      MYSQL_USER: ${MYSQL_USER:-${MARIADB_USER}}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD}}
-      MARIADB_AUTO_UPGRADE: "1"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MARIADB_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,27 +23,8 @@ services:
     networks:
       - default
 
-  redis:
-    image: ${REDIS_IMAGE:-redis:alpine}
-    logging:
-      driver: none
-    volumes:
-      - ./redis/data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    environment:
-      - REDIS_REPLICATION_MODE=master
-    restart: always
-    networks:
-      - default
-    healthcheck:  # ✅ ADD: Redis reliability
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   litespeed:
-    image: ${LITESPEED_IMAGE:-litespeedtech/openlitespeed:1.8.5-lsphp85}
+    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
     container_name: litespeed
     env_file:
       - .env
@@ -62,32 +42,41 @@ services:
       - 7080:7080
     restart: always
     environment:
-      TZ: ${TIMEZONE:-UTC}
+      TZ: ${TimeZone}
     networks:
       - default
     depends_on:
-      mariadb:
-        condition: service_healthy  # ✅ WAITS for MariaDB
-      redis:
+      mysql:
         condition: service_healthy
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION:-fpm-alpine}
+    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
     env_file:
       - .env
+    ports:
+      - 8080:80
     environment:
-      PMA_HOST: mariadb
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
-      PMA_ABSOLUTE_URI: /phpmyadmin/  # ✅ v2.0 path-only
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     restart: always
     networks:
       - default
     depends_on:
-      mariadb:
+      mysql:
         condition: service_healthy
 
-volumes:
-  mariadb_data:
+  redis:
+    image: "redis:alpine"
+    logging:
+      driver: none
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    restart: always
+    networks:
+      - default
 
 networks:
   default:
