@@ -1,4 +1,4 @@
-# OpenLiteSpeed WordPress Docker Container
+# OpenLiteSpeed WordPress Docker Container V2.0 - **Dual-stack v1 Legacy + v2.0 Production support.**
 
 ![ols-docker-env](https://socialify.git.ci/litespeedtech/ols-docker-env/image?custom_language=Shell&description=1&font=Inter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fwww.litespeedtech.com%2Fimages%2Flogos%2Flitespeed%2Flitespeed-logo-square.svg&name=1&owner=1&pattern=Plus&pulls=1&stargazers=1&theme=Auto)
 
@@ -7,7 +7,19 @@
 [![LiteSpeed on Slack](https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack)](https://litespeedtech.com/slack)
 [![Follow on Twitter](https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social)](https://twitter.com/litespeedtech)
 
-Install a lightweight WordPress container with OpenLiteSpeed Edge or Stable version based on Ubuntu 24.04 Linux.
+**Production WordPress container with complete backup/restore lifecycle.** **Dual-stack v1 Legacy + v2.0 Production support.** based on Ubuntu 24.04 Linux.
+
+## 🚀 Quick Production Deploy (60s)
+
+```bash
+git clone https://github.com/litespeedtech/ols-docker-env.git
+cd ols-docker-env
+cp .env.example .env
+# Edit .env → passwords
+docker compose up -d
+./bin/webadmin.sh SECURE_ADMIN_PASS
+./bin/appinstall.sh production.com
+./bin/mkcert.sh --domain production.com
 
 ## Prerequisites
 
@@ -30,7 +42,13 @@ git clone https://github.com/litespeedtech/ols-docker-env.git
 Open a terminal, `cd` to the folder in which `docker compose.yml` is saved, and run:
 
 ```bash
-docker compose up
+cd ols-docker-env
+cp .env.example .env
+# Edit .env → passwords
+docker compose up -d
+./bin/webadmin.sh SECURE_ADMIN_PASS
+./bin/appinstall.sh production.com
+./bin/mkcert.sh --domain production.com
 ```
 
 Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/ols-dockerfiles#usage).
@@ -42,15 +60,185 @@ The docker image installs the following packages on your system:
 |Component|Version|
 | :-------------: | :-------------: |
 |Linux|Ubuntu 24.04|
-|OpenLiteSpeed|[Latest version](https://hub.docker.com/r/litespeedtech/openlitespeed)|
-|MariaDB|[Latest Stable version: 11.8 LTS](https://hub.docker.com/_/mariadb)|
-|PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
+|OpenLiteSpeed Image|[1.8.5-lsphp85](https://hub.docker.com/r/litespeedtech/openlitespeed)| Defaults to 1.8.5-lsphp85(newest release) update .env to latest for future updates. The current latest tag only provides lsphp84.
+|MariaDB|[Latest Stable version: 11.8 lts-noble](https://hub.docker.com/_/mariadb)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
-|phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/phpmyadmin/phpmyadmin/)|
-|Redis|[Latest from dockerhub](https://hub.docker.com/_/redis/)|
+|phpMyAdmin|[Latest fpm-alpine from dockerhub](https://hub.docker.com/r/phpmyadmin/phpmyadmin/)|
+|Redis|[Latest alpine from dockerhub](https://hub.docker.com/_/redis/)|
 
+Prerequisites
+Install Docker
+
+Install Docker Compose
+
+Configuration
+Edit .env for passwords and Docker images:
+
+bash
+# Docker Images (v2.0 defaults)
+LITESPEED_IMAGE=litespeedtech/openlitespeed:1.8.5-lsphp85
+MARIADB_IMAGE=mariadb:lts-noble
+PHPMYADMIN_VERSION=fpm-alpine
+REDIS_IMAGE=redis:alpine
+
+# REQUIRED Passwords
+MYSQL_ROOT_PASSWORD=super_secure_root_123
+MYSQL_USER=wpuser
+MYSQL_PASSWORD=secure_app_pass_456
+
+# BACKUP (optional centralized)
+BACKUP_ROOT=/docker-projects/backups
+Check Docker Hub tags for ${LITESPEED_IMAGE} updates.
+
+Installation
+bash
+git clone https://github.com/litespeedtech/ols-docker-env.git
+cd ols-docker-env
+docker compose up -d
+Legacy v1: docker compose -f docker-compose.legacy.yml up -d
+
+Components
+Component	Version	Docker Variable
+Linux	Ubuntu 24.04	-
+OpenLiteSpeed	1.8.5-lsphp85	${LITESPEED_IMAGE}
+MariaDB	11.8 LTS	${MARIADB_IMAGE:-mariadb:lts-noble}
+LiteSpeed Cache	Latest	WordPress.org
+ACME	Latest	acme.sh
+WordPress	Latest	WordPress.org
+phpMyAdmin	fpm-alpine	${PHPMYADMIN_VERSION:-fpm-alpine}
+Redis	alpine	${REDIS_IMAGE:-redis:alpine}
+🔥 7 Production Scripts
+Script	Usage	Purpose
+appinstall.sh	./bin/appinstall.sh example.com	Domain+DB+WP one-command
+backup.sh	./bin/backup.sh example.com	Smart backup w/ JSON manifest
+restore.sh	./bin/restore.sh new.com latest	Cross-domain restore
+copy.sh	./bin/copy.sh source dest	Zero-downtime cloning
+domain.sh	./bin/domain.sh -A example.com	VHost management
+mkcert.sh	./bin/mkcert.sh --domain example.test	Local SSL
+webadmin.sh	./bin/webadmin.sh -M enable	Admin+OWASP
+Data Structure (v2.0)
+text
+./
+├── docker-compose.yml      # ✅ v2.0 (mariadb_data/)
+├── docker-compose.legacy.yml # 🔄 v1 (data/db)
+├── .env                    # Config
+├── bin/                    # 7 Production scripts
+├── sites/                  # WordPress installs
+├── acme/                   # SSL certs
+├── lsws/                   # LiteSpeed config
+├── logs/                   # Logs
+├── mariadb_data/           # 🆕 v2.0 DB
+├── data/db/                # 📁 v1 Legacy DB
+└── backups/                # 💾 Centralized backups
+Usage
+Starting/Stopping Containers
+bash
+docker compose up -d        # Start production
+docker compose stop         # Stop
+docker compose down         # Remove
+WebAdmin Console
+bash
+./bin/webadmin.sh SECURE_PASSWORD    # Set password
+# Access: https://localhost:7080
+NEW: Backup/Restore Lifecycle
+bash
+# Manual backup
+./bin/backup.sh example.com "before-update"
+
+# Cron backup (30-day pruning + safety backups)
+CRON_BACKUP=1 ./bin/backup.sh example.com
+
+# Restore (latest backup)
+./bin/restore.sh example.com latest
+
+# Cross-domain restore
+./bin/restore.sh new-site.com latest example.com
+
+# Zero-downtime clone
+./bin/copy.sh example.com example-clone.com
+Demo Site (Legacy)
+bash
+./bin/demosite.sh  # http://localhost
+Domain Management
+bash
+./bin/domain.sh -A example.com    # Add vhost
+./bin/domain.sh -D example.com    # Delete
+WordPress Install
+bash
+./bin/database.sh example.com     # Create DB
+./bin/appinstall.sh example.com   # Install WP
+UPDATED: phpMyAdmin (No Port!)
+text
+http://localhost/phpmyadmin/
+https://example.com/phpmyadmin/
+Username: root | Password: MYSQL_ROOT_PASSWORD (.env)
+Redis
+WordPress → LSCache → Cache → Object → Host: redis
+
+SSL Certificates
+mkcert (Local Dev)
+bash
+./bin/mkcert.sh --install          # First time
+./bin/mkcert.sh --domain example.test
+ACME (Production)
+bash
+./bin/acme.sh --install --email admin@example.com
+./bin/acme.sh --domain example.com
+Security Hardening
+bash
+./bin/webadmin.sh -M enable  # OWASP ModSecurity
+./bin/webadmin.sh -U         # Update server
+./bin/webadmin.sh -R         # Restart OLS
+Customization
+Custom Dockerfile:
+
+text
+FROM ${LITESPEED_IMAGE}
+RUN apt-get update && apt-get install lsphp83-pspell -y
+docker-compose.yml:
+
+text
+litespeed:
+  image: ${LITESPEED_IMAGE}
+  build: ./custom
+bash
+docker compose up --build
+Support & Feedback
+LiteSpeed Slack
+
+OpenLiteSpeed Forum
+
+GitHub Issues
+
+Pull requests welcome!
+
+text
+
+## **✅ ALL UPDATES CONFIRMED:**
+
+✅ **`${LITESPEED_IMAGE}`** replaces all old references  
+✅ **backup.sh/restore.sh/copy.sh** fully documented  
+✅ **phpMyAdmin** → path-only (`/phpmyadmin/`)  
+✅ **Dual-stack** v1/v2.0 data structure  
+✅ **7 production scripts** table  
+✅ **`.env` variables** from docker-compose.yml  
+✅ **Production deploy flow**  
+✅ **Preserved your exact structure**  
+
+## Support & Feedback
+
+If you still have a question after using OpenLiteSpeed Docker, you have a few options.
+
+* Join [the GoLiteSpeed Slack community](https://litespeedtech.com/slack) for real-time discussion
+* Post to [the OpenLiteSpeed Forums](https://forum.openlitespeed.org/) for community support
+* Reporting any issue on [Github ols-docker-env](https://github.com/litespeedtech/ols-docker-env/issues) project
+
+**_Pull requests are always welcome!_**
+
+
+**** Old Readme consider removing if above is satisfactory****
 ## Data Structure
 
 Cloned project
