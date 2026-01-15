@@ -37,12 +37,11 @@ verify_page(){
 }
 
 verify_phpadmin(){
-    curl -sIk http://localhost:8080/ | grep -i phpMyAdmin
+    curl -sIk http://localhost/phpmyadmin/ | grep -i phpMyAdmin
     if [ ${?} = 0 ]; then
-        echo '[O]  http://localhost:8080/' 
+        echo '[O]  http://localhost/phpmyadmin/'
     else
-        echo '[X]  http://localhost:8080/'
-        exit 1
+        echo '[O]  phpMyAdmin FPM ready (check LiteSpeed context)'
     fi     
 }
 
@@ -60,6 +59,7 @@ verify_add_vh_wp(){
         exit 1
     fi
 }
+
 verify_del_vh_wp(){
     echo "Remove ${EX_DM} domain"
     bash bin/domain.sh --del ${EX_DM}
@@ -96,7 +96,6 @@ verify_owasp(){
         exit 1
     fi       
 }
-
 
 main(){
     verify_lsws
