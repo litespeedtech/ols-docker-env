@@ -79,7 +79,7 @@ cat > "${BACKUP_DIR}/restore-info.json" << EOF
     "${DOMAIN}_db.sql.gz",
     "${DOMAIN}_site.tar.gz"
   ],
-  "restore_command": "${COMPOSE_CMD} run --rm mariadb mariadb-dump ${DOMAIN} ${FOLDER_NAME##*/}",
+  "restore_command": "${COMPOSE_CMD} run --rm mysql mariadb-dump ${DOMAIN} ${FOLDER_NAME##*/}",
   "docker_cmd": "${DOCKER_CMD}"
 }
 EOF

@@ -65,7 +65,7 @@ sed -i "s|DB_NAME', '.*'|DB_NAME', '${NEW_DB}'|" ./sites/${NEW_DOMAIN}/wp-config
 
 # 6. Database URL cleanup (safety net)
 echo "🔄 Final DB URL cleanup..."
-${DOCKER_CMD} exec -i mariadb mysql "${NEW_DB}" -e "
+${DOCKER_CMD} exec -i mysql mysql "${NEW_DB}" -e "
   UPDATE wp_options SET option_value = REPLACE(option_value, '${SOURCE_DOMAIN}', '${NEW_DOMAIN}') 
   WHERE option_name = 'home' OR option_name = 'siteurl';
   UPDATE wp_posts SET guid = REPLACE(guid, '${SOURCE_DOMAIN}', '${NEW_DOMAIN}');
@@ -75,7 +75,7 @@ ${DOCKER_CMD} exec -i mariadb mysql "${NEW_DB}" -e "
 
 # 7. Optimize tables
 echo "⚡ Optimizing database..."
-${DOCKER_CMD} exec -i mariadb mysql "${NEW_DB}" -e "
+${DOCKER_CMD} exec -i mysql mysql "${NEW_DB}" -e "
   OPTIMIZE TABLE wp_posts;
   OPTIMIZE TABLE wp_postmeta; 
   OPTIMIZE TABLE wp_options;
