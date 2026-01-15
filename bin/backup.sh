@@ -22,12 +22,18 @@ if [[ ! -t 0 && -n "$CRON_BACKUP" ]]; then
     IS_CRON=true
 fi
 
-# BACKUP_ROOT from .env, fallback to ./backups
+# BACKUP_ROOT from .env, fallback to ./backups (supports /docker-projects/backups)
 BACKUP_ROOT="${BACKUP_ROOT:-./backups}"
 DATE_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 SUFFIX=${IS_CRON:+"_cron"}
 
-FOLDER_NAME="${DATE_TIME}_${NOTE}${SUFFIX}"
+# FIXED FOLDER_NAME logic (no double underscore)
+if [[ -n "$NOTE" ]]; then
+  FOLDER_NAME="${DATE_TIME}_${NOTE}${SUFFIX}"
+else
+  FOLDER_NAME="${DATE_TIME}${SUFFIX}"
+fi
+
 BACKUP_DIR="${BACKUP_ROOT}/${DOMAIN}/${FOLDER_NAME}"
 mkdir -p "$BACKUP_DIR" || { echo "❌ Failed to create $BACKUP_DIR"; exit 1; }
 
@@ -41,7 +47,7 @@ if [[ -z "$TARGET_DB" ]]; then
     exit 1
 fi
 
-# 1. Database backup (with progress via pv if available, mariadb-dump → mysqldump)
+# 1. Database backup (with progress via pv if available, mysqldump)
 echo "📥 Dumping database ${TARGET_DB}..."
 if command -v pv >/dev/null 2>&1; then
     ${DOCKER_CMD} exec mariadb mysqldump --single-transaction --quick --lock-tables=false "$TARGET_DB" | pv | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
