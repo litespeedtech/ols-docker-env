@@ -1,12 +1,10 @@
 services:
   mariadb:
-    # Allow override from .env (MARIADB_IMAGE). Default to the digest you validated.
-    image: ${MARIADB_IMAGE:-mariadb@sha256:1cac8492bd78b1ec693238dc600be173397efd7b55eabc725abc281dc855b482}
+    image: ${MARIADB_IMAGE:-mariadb:lts-noble}
     logging:
       driver: none
-    command: ["--max-allowed-packet=512M"]
+    command: ["--max-allowed-packet=${MARIADB_PACKET_SIZE:-64M}"]
     volumes:
-      # Default to a named volume for new installs. Use docker-compose.hostdb.yml to opt-in host bind.
       - mariadb_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
@@ -16,7 +14,6 @@ services:
       MARIADB_AUTO_UPGRADE: "1"
     restart: always
     healthcheck:
-      # Use mysqladmin ping for a reliable readiness probe (requires mysqladmin in image)
       test: ["CMD", "bash", "-c", "mysqladmin ping -h127.0.0.1 -uroot -p\"${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}\" || exit 1"]
       interval: 30s
       timeout: 10s
@@ -26,7 +23,7 @@ services:
       - default
 
   redis:
-    image: "redis:alpine"
+    image: ${REDIS_IMAGE:-redis:alpine}
     logging:
       driver: none
     volumes:
@@ -39,7 +36,7 @@ services:
       - default
 
   litespeed:
-    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    image: ${LITESPEED_IMAGE:-litespeedtech/openlitespeed:1.8.5-lsphp85}
     container_name: litespeed
     env_file:
       - .env
@@ -57,26 +54,27 @@ services:
       - 7080:7080
     restart: always
     environment:
-      TZ: ${TIMEZONE}
+      TZ: ${TIMEZONE:-UTC}
     networks:
       - default
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
+    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION:-fpm-alpine}
     env_file:
       - .env
-    ports:
-      - 8080:80
     environment:
       PMA_HOST: mariadb
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
+      PMA_ABSOLUTE_URI: /phpmyadmin/
     restart: always
     networks:
       - default
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
 
 volumes:
   mariadb_data:
