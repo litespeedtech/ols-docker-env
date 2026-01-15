@@ -1,5 +1,24 @@
+# User secrets & local config
+.env
+
+# Docker data & logs (KEEP YOUR EXISTING)
 data
 latest.yml
 config
 lsws/conf
 certs
+logs/*
+
+# Docker volumes
+redis/data/*
+mariadb/data/*
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
