@@ -72,22 +72,21 @@ SITE_FILE="${RESTORE_PATH}/${BACKUP_DOMAIN}_site.tar.gz"
 
 echo "🔄 Restoring ${DOMAIN} from ${BACKUP_DOMAIN}:${TIMESTAMP}..."
 
-# AUTO PRE-RESTORE BACKUP (uses updated backup.sh with volume detection)
+# AUTO PRE-RESTORE BACKUP (uses backup.sh)
 echo "💾 Auto-saving current state..."
 bash "$(dirname "$0")/backup.sh" "${DOMAIN}" "Pre-Restore-AutoSave"
 
-# Get target database + container (robust detection)
+# FIXED: Hardcode mariadb service + correct mysql client
+DB_CONTAINER="mariadb"
 TARGET_DB=$(grep "DB_NAME" "./sites/${DOMAIN}/wp-config.php" 2>/dev/null | cut -d\' -f4 || echo "${MARIADB_DATABASE}")
-DB_CONTAINER=$(${DOCKER_CMD} ps --filter "name=mariadb" --format "{{.Names}}" | head -n1)
 
 [[ -z "$TARGET_DB" ]] && { echo "❌ Could not determine target database"; exit 1; }
-[[ -z "$DB_CONTAINER" ]] && { echo "❌ MariaDB container '${DB_CONTAINER}' not running"; exit 1; }
 
-# 1. Restore database
+# 1. Restore database (FIXED: mysql client, matches backup.sh)
 echo "📥 Restoring database to ${TARGET_DB}..."
-gunzip -c "${DB_FILE}" | ${DOCKER_CMD} exec -i "${DB_CONTAINER}" mariadb "${TARGET_DB}" --force
+gunzip -c "${DB_FILE}" | ${DOCKER_CMD} exec -i "${DB_CONTAINER}" mysql "${TARGET_DB}"
 
-# 2. Preserve existing site
+# 2. Preserve existing site (atomic)
 echo "📂 Preserving existing site..."
 rm -rf "./sites/${DOMAIN}_pre_restore" 2>/dev/null || true
 mv "./sites/${DOMAIN}" "./sites/${DOMAIN}_pre_restore" 2>/dev/null || true
@@ -101,27 +100,34 @@ echo "🔧 Fixing permissions..."
 chown -R 1000:1000 "./sites/${DOMAIN}"
 chmod -R 755 "./sites/${DOMAIN}"
 
-# CROSS-DOMAIN: Auto-setup vhost + DB (NEW DOMAINS ONLY)
+# CROSS-DOMAIN: Auto-setup vhost + DB (INLINE, no external deps)
 if [[ "$BACKUP_DOMAIN" != "$DOMAIN" && -n "$MARIADB_ROOT_PASSWORD" ]]; then
-    echo "🌐 Setting up vhost + database for new domain ${DOMAIN}..."
+    echo "🌐 Setting up new domain ${DOMAIN}..."
     
     NEW_DB="${MARIADB_DATABASE}_${DOMAIN//./_}"
-    ${DOCKER_CMD} exec -i "${DB_CONTAINER}" mariadb -uroot -p"${MARIADB_ROOT_PASSWORD}" \
-        -e "CREATE DATABASE IF NOT EXISTS \`${NEW_DB}\`;"
+    ${DOCKER_CMD} exec -i "${DB_CONTAINER}" mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "
+        CREATE DATABASE IF NOT EXISTS \`${NEW_DB}\`;
+        GRANT ALL PRIVILEGES ON \`${NEW_DB}\`.* TO '${MARIADB_USER:-wordpress}'@'%' IDENTIFIED BY '${MARIADB_PASSWORD:-wordpress}';
+        FLUSH PRIVILEGES;
+    "
 
-    sed -i "s/DB_NAME.*=.*/DB_NAME = '${NEW_DB}';/" "./sites/${DOMAIN}/wp-config.php"
+    # Update wp-config.php
+    sed -i "s|DB_NAME', '.*'|DB_NAME', '${NEW_DB}'|" "./sites/${DOMAIN}/wp-config.php"
     
-    ${DOCKER_CMD} exec -i "${DB_CONTAINER}" mariadb "${NEW_DB}" -e "
+    # URL replacement
+    ${DOCKER_CMD} exec -i "${DB_CONTAINER}" mysql "${NEW_DB}" -e "
         UPDATE wp_options SET option_value = REPLACE(option_value, '${BACKUP_DOMAIN}', '${DOMAIN}') 
         WHERE option_name = 'home' OR option_name = 'siteurl';
-        UPDATE wp_posts SET guid = REPLACE(guid, '${BACKUP_DOMAIN}','${DOMAIN}');
+        UPDATE wp_posts SET guid = REPLACE(guid, '${BACKUP_DOMAIN}', '${DOMAIN}');
         UPDATE wp_posts SET post_content = REPLACE(post_content, '${BACKUP_DOMAIN}', '${DOMAIN}');
-        UPDATE wp_postmeta SET meta_value = REPLACE(meta_value,'${BACKUP_DOMAIN}','${DOMAIN}');
+        UPDATE wp_postmeta SET meta_value = REPLACE(meta_value, '${BACKUP_DOMAIN}', '${DOMAIN}');
     "
     
-    MARIADB_DATABASE="${NEW_DB}" bash "$(dirname "$0")/database.sh" "${DOMAIN}"
+    # Domain setup
+    mkdir -p "./sites/${DOMAIN}/{html,logs,certs}"
+    chown -R 1000:1000 "./sites/${DOMAIN}"
     bash "$(dirname "$0")/domain.sh" -A "${DOMAIN}"
-    echo "✅ Vhost + DB created for ${DOMAIN}"
+    
 elif [[ "$BACKUP_DOMAIN" != "$DOMAIN" ]]; then
     echo "❌ Cross-domain restore requires MARIADB_ROOT_PASSWORD in .env"
     exit 1
@@ -129,7 +135,7 @@ fi
 
 # POST-RESTORE OPTIMIZATION
 echo "⚡ Running post-restore optimization..."
-${DOCKER_CMD} exec -i "${DB_CONTAINER}" mariadb "${TARGET_DB}" -e "
+${DOCKER_CMD} exec -i "${DB_CONTAINER}" mysql "${TARGET_DB}" -e "
     OPTIMIZE TABLE wp_posts;
     OPTIMIZE TABLE wp_postmeta;
     OPTIMIZE TABLE wp_options;
