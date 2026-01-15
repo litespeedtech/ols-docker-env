@@ -1,4 +1,3 @@
-cat > .travis/verify.sh << 'EOF'
 #!/bin/bash
 set -o errexit
 
@@ -27,6 +26,3 @@ bash bin/appinstall.sh wordpress example.com
 echo "✅ v2.0 Production workflow OK"
 
 echo "🎉 v2.0 TRAVIS PASSED ✅"
-EOF
-
-chmod +x .travis/verify.sh
