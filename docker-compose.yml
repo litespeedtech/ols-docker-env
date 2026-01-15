@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mariadb:
     image: ${MARIADB_IMAGE:-mariadb:lts-noble}
@@ -18,7 +20,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 20
-      start_period: 80s
+      start_period: 80s  # ✅ PERFECT - handles 60-90s init
     networks:
       - default
 
@@ -34,6 +36,12 @@ services:
     restart: always
     networks:
       - default
+    healthcheck:  # ✅ ADD: Redis reliability
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   litespeed:
     image: ${LITESPEED_IMAGE:-litespeedtech/openlitespeed:1.8.5-lsphp85}
@@ -59,6 +67,8 @@ services:
       - default
     depends_on:
       mariadb:
+        condition: service_healthy  # ✅ WAITS for MariaDB
+      redis:
         condition: service_healthy
 
   phpmyadmin:
@@ -68,7 +78,7 @@ services:
     environment:
       PMA_HOST: mariadb
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
-      PMA_ABSOLUTE_URI: /phpmyadmin/
+      PMA_ABSOLUTE_URI: /phpmyadmin/  # ✅ v2.0 path-only
     restart: always
     networks:
       - default
