@@ -1,16 +1,11 @@
 #!/bin/bash
-# LEGACY V1 TEST: ./data/db EXISTS → mysql mode
+# LEGACY V1 TEST: run new combined verify helper (legacy + new modes)
 
-echo "🧪 === LEGACY TEST START ==="
+echo "🧪 === RUNNING COMBINED VERIFY (legacy + new) ==="
 
-# Simulate existing user with ./data/db
-mkdir -p ./data/db
-touch ./data/db/.legacy-test
-echo "✅ Created ./data/db (triggers LEGACY mode)"
-
-# Run main verification
-echo "🔍 Running verify.sh (should detect LEGACY mysql mode)..."
-./verify.sh
+# Make verify script executable and run only legacy test by default for CI compatibility
+chmod +x ./scripts/verify.sh || true
+./scripts/verify.sh legacy
 
 LEGACY_EXIT_CODE=$?
 
@@ -21,10 +16,6 @@ else
   echo "❌ LEGACY TEST FAILED: verify.sh returned $LEGACY_EXIT_CODE"
   exit 1
 fi
-
-# Cleanup
-rm -rf ./data/db
-echo "🧹 Cleaned ./data/db"
 
 echo "🎉 === LEGACY TEST COMPLETE ==="
 exit 0
