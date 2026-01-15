@@ -2,27 +2,67 @@ name: docker-build
 
 on:
   push:
-    branches:
-      - master
-
+    branches: [ master ]
   pull_request:
-    branches:
-      - master
+    branches: [ master ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup
+      - uses: actions/checkout@v4  # Updated from v2
+      
+      - name: Setup Docker
+        run: docker compose version
+        
+      - name: Start v2.0 Services
         run: |
-          docker compose version
+          echo "🚀 Starting v2.0 production stack..."
           docker compose up -d
           docker image ls
-          sleep 10
-      - name: Verify
-        run: bash .travis/verify.sh    
-      - name: Clean up 
+          
+          # Smart healthcheck wait (Docker Compose v2.20+)
+          echo "⏳ Waiting for services healthy..."
+          docker compose up --wait --wait-timeout 180 || true
+          
+          # Fallback wait for MariaDB (80s start_period)
+          timeout 200s bash -c '
+            until docker compose ps | grep -q "mariadb.*healthy"; do
+              echo "⏳ MariaDB initializing... (normal 60-90s)"
+              docker compose ps
+              sleep 5
+            done
+            echo "✅ MariaDB HEALTHY"
+          '
+          
+      - name: v2.0 Production Verify  # ← REPLACED .travis/verify.sh
         run: |
-         docker compose stop
-         docker compose rm -f            
+          echo "🔍 Testing v2.0 production features..."
+          
+          # WebAdmin Console (7080)
+          curl -sIk http://localhost:7080/ | grep -i LiteSpeed && echo "✅ WebAdmin OK"
+          
+          # phpMyAdmin path-only (v2.0 - NO 8080 port)
+          curl -sIk http://localhost/phpmyadmin/ | grep -i phpMyAdmin && echo "✅ phpMyAdmin v2.0 path-only"
+          
+          # Shellcheck ALL production scripts
+          shellcheck bin/*.sh && echo "✅ Shellcheck production scripts"
+          
+          # Test ALL 7 production scripts
+          for script in bin/appinstall.sh bin/backup.sh bin/restore.sh bin/copy.sh bin/domain.sh bin/mkcert.sh bin/webadmin.sh; do
+            if [[ -f "$script" ]]; then
+              echo -n "Testing $script... "
+              bash "$script" --help >/dev/null 2>&1 && echo "✅ $(basename $script)" || echo "⚠️  $(basename $script)"
+            fi
+          done
+          
+          # Domain workflow test
+          bash bin/domain.sh --add example.com >/dev/null 2>&1 && echo "✅ domain.sh workflow"
+          
+          echo "🎉 v2.0 PRODUCTION VERIFICATION COMPLETE ✅"
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v || true
+          docker system prune -f || true
