@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 source .env 2>/dev/null || true
 
-# NEW VOLUME DETECTION (V2) - Required for mixed environments
+# VOLUME DETECTION (matches all scripts)
 if [ -d "./data/db" ]; then
     COMPOSE_CMD="docker-compose"
     DOCKER_CMD="docker"
-    echo "✅ Legacy volume → docker-compose/docker mode" >&2
 else
     COMPOSE_CMD="docker compose"
     DOCKER_CMD="docker"
-    echo "🚀 Fresh install → docker compose/docker mode" >&2
 fi
 
 CONT_NAME='litespeed'
@@ -21,23 +19,11 @@ echow(){
     echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
 }
 
-help_message(){
-    echo -e "\033[1mOPTIONS\033[0m"
-    echow "-A, --add [domain_name]"
-    echo "${EPACE}${EPACE}Example: domain.sh -A example.com (adds VH + site dir)"
-    echow "-D, --del [domain_name]"
-    echo "${EPACE}${EPACE}Example: domain.sh -D example.com (removes VH)"
-    echow '-H, --help'
-    echo "${EPACE}${EPACE}Display help and exit."
-    exit 0
-}
-
 check_input(){
     if [[ -z "${1}" ]]; then
         echow "❌ Domain name required!"
-        help_message
+        exit 1
     fi
-    # Basic domain validation
     [[ ! "$1" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]$ ]] && {
         echow "❌ Invalid domain format: $1"
         exit 1
@@ -57,16 +43,14 @@ add_domain(){
     
     if [[ ! -d "./sites/${domain}" ]]; then 
         echow "📁 Creating site directory..."
-        mkdir -p "./sites/${domain}/{html,logs,certs}" || {
-            echow "❌ Failed to create site directories"
-            exit 1
-        }
+        mkdir -p "./sites/${domain}/{html,logs,certs}"
         chown -R 1000:1000 "./sites/${domain}"
     else
         echow "[O] Site directory already exists."
     fi
     
-    bash bin/webadmin.sh -r || { echow "❌ LiteSpeed restart failed!"; exit 1; }
+    # FIXED: Direct container restart
+    ${COMPOSE_CMD} restart "${CONT_NAME}"
     echow "✅ Domain ${domain} added successfully!"
 }
 
@@ -81,16 +65,24 @@ del_domain(){
         exit 1
     }
     
-    bash bin/webadmin.sh -r || { echow "❌ LiteSpeed restart failed!"; exit 1; }
+    # FIXED: Direct container restart
+    ${COMPOSE_CMD} restart "${CONT_NAME}"
     echow "✅ Domain ${domain} removed successfully!"
 }
 
-# Parse arguments properly
+help_message(){
+    echo -e "\033[1mOPTIONS\033[0m"
+    echow "-A, --add [domain_name]"
+    echo "${EPACE}${EPACE}Example: domain.sh -A example.com"
+    echow "-D, --del [domain_name]" 
+    echo "${EPACE}${EPACE}Example: domain.sh -D example.com"
+    echow '-H, --help'
+    exit 0
+}
+
 while [[ $# -gt 0 ]]; do
     case ${1} in
-        -[hH]*|--help|help)
-            help_message
-            ;;
+        -[hH]*|--help|help) help_message ;;
         -[aA]*|--add)
             shift
             add_domain "${1}"
@@ -101,10 +93,7 @@ while [[ $# -gt 0 ]]; do
             del_domain "${1}"
             exit 0
             ;;
-        *)
-            echow "❌ Unknown option: ${1}"
-            help_message
-            ;;
+        *) echow "❌ Unknown option: ${1}"; help_message ;;
     esac
     shift
 done
