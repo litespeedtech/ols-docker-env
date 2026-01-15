@@ -1,42 +1,49 @@
 #!/usr/bin/env bash
 source .env 2>/dev/null || true
 
-# LEGACY FALLBACK: MYSQL_* vars OR COMPOSE_V1=true
-if [ -n "${MYSQL_DATABASE:-}" ] || [ "${COMPOSE_V1:-false}" = "true" ]; then
-    LEGACY_MODE=true
-    ROOT_PASS=${MYSQL_ROOT_PASSWORD}
-    DB_NAME=${MYSQL_DATABASE}
-    CLIENT_CMD="mysql"
-    echo "🔄 Legacy mode: MYSQL_* vars detected"
+# VOLUME DETECTION (matches backup.sh/copy.sh)
+if [ -d "./data/db" ]; then
+    COMPOSE_CMD="docker-compose"
+    DOCKER_CMD="docker"
+    echo "✅ Legacy volume → docker-compose/docker mode" >&2
 else
-    LEGACY_MODE=false
-    ROOT_PASS=${MARIADB_ROOT_PASSWORD}
-    DB_NAME=${MARIADB_DATABASE}
-    CLIENT_CMD="mariadb"
+    COMPOSE_CMD="docker compose"
+    DOCKER_CMD="docker"
+    echo "🚀 Fresh install → docker compose/docker mode" >&2
 fi
 
-# Universal Compose detection
-COMPOSE_CMD=$(command -v docker-compose >/dev/null 2>&1 && echo "docker-compose" || echo "docker compose")
+DOMAIN=$1
+SQL_DB=${MARIADB_DATABASE:-wordpress}_${DOMAIN//./_}
+SQL_USER=${MARIADB_USER:-wordpress}
+SQL_PASS=${MARIADB_PASSWORD:-wordpress}
+ROOT_PASS=${MARIADB_ROOT_PASSWORD}
 
-DOMAIN='' SQL_DB='' SQL_USER='' SQL_PASS='' ANY="'%'" SET_OK=0 EPACE='        ' METHOD=0
-
-check_db_access(){
-    ${COMPOSE_CMD} exec -T mariadb su -c "${CLIENT_CMD} -uroot --password=${ROOT_PASS} -e 'status'" >/dev/null 2>&1
+check_db_access() {
+    ${DOCKER_CMD} exec mariadb mysql -uroot -p"${ROOT_PASS}" -e "status" >/dev/null 2>&1
 }
 
-check_db_exist(){
-    ${COMPOSE_CMD} exec -T mariadb su -c "test -e /var/lib/mysql/${1}"
+db_setup() {
+    echo "📥 Creating database '${SQL_DB}' for ${DOMAIN}..."
+    ${DOCKER_CMD} exec -i mariadb mysql -uroot -p"${ROOT_PASS}" -e "
+        CREATE DATABASE IF NOT EXISTS \`${SQL_DB}\`;
+        GRANT ALL PRIVILEGES ON \`${SQL_DB}\`.* TO '${SQL_USER}'@'%' IDENTIFIED BY '${SQL_PASS}';
+        FLUSH PRIVILEGES;
+    "
 }
 
-check_db_not_exist(){
-    ${COMPOSE_CMD} exec -T mariadb su -c "test -e /var/lib/mysql/${1}"
-}
+# MAIN
+if [[ -z "$DOMAIN" ]]; then
+    echo "Usage: $0 <domain>"
+    exit 1
+fi
 
-db_setup(){  
-    ${COMPOSE_CMD} exec -T mariadb su -c "${CLIENT_CMD} -uroot --password=${ROOT_PASS} \
-    -e \"CREATE DATABASE '${SQL_DB}';\" \
-    -e \"GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';\" \
-    -e \"FLUSH PRIVILEGES;\""
-    SET_OK=${?}
-}
-# [Rest unchanged...]
+if ! check_db_access; then
+    echo "❌ Cannot access MariaDB (check MARIADB_ROOT_PASSWORD)"
+    exit 1
+fi
+
+db_setup
+echo "✅ Database '${SQL_DB}' ready for ${DOMAIN}"
+echo "   wp-config.php → DB_NAME='${SQL_DB}'"
+echo "   DB_USER='${SQL_USER}'"
+echo "   DB_PASSWORD='${SQL_PASS}'"
