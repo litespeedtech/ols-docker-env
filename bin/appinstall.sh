@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 source .env 2>/dev/null || true
 
-# VOLUME DETECTION (V1 default for legacy, V2 for new)
-if [ -d "./data/db" ]; then
-    COMPOSE_CMD="docker-compose"
-    echo "✅ Legacy volume → docker-compose mode" >&2
-else
-    COMPOSE_CMD="docker compose"
-    echo "🚀 Fresh install → docker compose mode" >&2
-fi
-
 APP_NAME=''
 DOMAIN=''
 EPACE='        '
@@ -24,7 +15,7 @@ help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
     echow '-A, --app [app_name] -D, --domain [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Example: appinstall.sh -A wordpress -D example.com"
-    echo "${EPACE}${EPACE}Will install WordPress CMS under the example.com domain"
+    echo "${EPACE}${EPACE}Works with docker-compose.legacy.yml OR docker-compose.yml"
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit."
     exit 0
@@ -38,7 +29,7 @@ check_input(){
 }
 
 app_download(){
-    ${COMPOSE_CMD} exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
+    docker compose exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
     bash bin/webadmin.sh -r
     exit 0
 }
