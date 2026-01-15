@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenLiteSpeed WordPress Docker Environment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 24px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+        }
+        h1 {
+            color: #1a1a2e;
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        .notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+        .notice-title {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        .notice p {
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        h2 {
+            color: #1a1a2e;
+            font-size: 20px;
+            margin: 24px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+        }
+        .components {
+            display: grid;
+            gap: 12px;
+        }
+        .component {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .component-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            color: white;
+            font-size: 18px;
+        }
+        .component-info h3 {
+            font-size: 15px;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .component-info p {
+            font-size: 13px;
+            color: #666;
+        }
+        .scripts {
+            display: grid;
+            gap: 8px;
+        }
+        .script {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .script code {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #495057;
+        }
+        .script-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        .quick-start {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .quick-start code {
+            color: #a8dadc;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="logo">🚀</div>
+                <h1>OpenLiteSpeed WordPress Docker Environment</h1>
+                <p class="subtitle">Production WordPress container with complete backup/restore lifecycle</p>
+            </div>
+
+            <div class="notice">
+                <div class="notice-title">Docker Required</div>
+                <p>This project requires Docker and Docker Compose to run. It creates containers for OpenLiteSpeed, MariaDB, Redis, and phpMyAdmin. To deploy this project, clone it to a Docker-enabled environment and follow the quick start instructions below.</p>
+            </div>
+
+            <h2>Components</h2>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">⚡</div>
+                    <div class="component-info">
+                        <h3>OpenLiteSpeed 1.8.5</h3>
+                        <p>High-performance web server with LSPHP 8.5</p>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🗄️</div>
+                    <div class="component-info">
+                        <h3>MariaDB 11.8 LTS</h3>
+                        <p>Latest stable database server</p>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔴</div>
+                    <div class="component-info">
+                        <h3>Redis Alpine</h3>
+                        <p>In-memory data structure store for caching</p>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔧</div>
+                    <div class="component-info">
+                        <h3>phpMyAdmin</h3>
+                        <p>Web interface for database management</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Quick Start (Docker Required)</h2>
+            <div class="quick-start">
+                <code>git clone https://github.com/litespeedtech/ols-docker-env.git
+cd ols-docker-env
+cp .env.example .env
+# Edit .env with your passwords
+docker compose up -d
+./bin/webadmin.sh SECURE_ADMIN_PASS
+./bin/appinstall.sh production.com</code>
+            </div>
+
+            <h2>Production Scripts</h2>
+            <div class="scripts">
+                <div class="script">
+                    <code>./bin/appinstall.sh example.com</code>
+                    <span class="script-desc">Domain + DB + WP one-command</span>
+                </div>
+                <div class="script">
+                    <code>./bin/backup.sh example.com</code>
+                    <span class="script-desc">Smart backup with JSON manifest</span>
+                </div>
+                <div class="script">
+                    <code>./bin/restore.sh new.com latest</code>
+                    <span class="script-desc">Cross-domain restore</span>
+                </div>
+                <div class="script">
+                    <code>./bin/copy.sh source dest</code>
+                    <span class="script-desc">Zero-downtime cloning</span>
+                </div>
+                <div class="script">
+                    <code>./bin/domain.sh -A example.com</code>
+                    <span class="script-desc">VHost management</span>
+                </div>
+                <div class="script">
+                    <code>./bin/mkcert.sh --domain example.com</code>
+                    <span class="script-desc">SSL certificate generation</span>
+                </div>
+                <div class="script">
+                    <code>./bin/webadmin.sh -M enable</code>
+                    <span class="script-desc">Admin + OWASP setup</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>View the full documentation on <a href="https://github.com/litespeedtech/ols-docker-env" target="_blank">GitHub</a></p>
+        </div>
+    </div>
+</body>
+</html>
