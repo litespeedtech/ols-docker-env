@@ -1,0 +1,50 @@
+name: Verify (legacy + new)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  verify-both:
+    name: Verify legacy + new
+    runs-on: ubuntu-latest
+    env:
+      # Force Compose V2 (uses `docker compose`) by default; override if you need docker-compose v1
+      COMPOSE_V2: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure Docker Buildx / Compose available
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install docker-compose-plugin (if missing)
+        run: |
+          set -eux
+          if ! docker compose version >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y docker-compose-plugin
+          fi
+          docker --version
+          docker compose version
+
+      - name: Prepare .env for CI (do not leak secrets)
+        run: |
+          cp .env.example .env || true
+          if ! grep -q 'MYSQL_ROOT_PASSWORD' .env; then
+            echo "MYSQL_ROOT_PASSWORD=test_ci_pass" >> .env
+          fi
+          if ! grep -q '^TIMEZONE=' .env; then
+            echo "TIMEZONE=UTC" >> .env
+          fi
+
+      - name: Make verify script executable
+        run: |
+          chmod +x scripts/verify.sh || true
+          chmod +x .travis/verify-legacy.sh || true
+
+      - name: Run verify (legacy + new)
+        timeout-minutes: 20
+        run: |
+          ./scripts/verify.sh all
