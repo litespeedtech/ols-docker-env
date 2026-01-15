@@ -1,128 +1,73 @@
 #!/usr/bin/env bash
 source .env 2>/dev/null || true
 
-# NEW VOLUME DETECTION (V2) - Required for mixed environments
+# STACK DETECTION (matches all scripts)
 if [ -d "./data/db" ]; then
     COMPOSE_CMD="docker-compose"
     DOCKER_CMD="docker"
-    echo "✅ Legacy volume → docker-compose/docker mode" >&2
 else
     COMPOSE_CMD="docker compose"
     DOCKER_CMD="docker"
-    echo "🚀 Fresh install → docker compose/docker mode" >&2
 fi
 
 APP_NAME='wordpress'
-CONT_NAME='litespeed'
-DOC_FD=''
-EPACE='        '
+DOMAIN=$1
 
-echow(){
-    FLAG=${1}
-    shift
-    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+echow() {
+    echo -e "\033[1m        ${1}\033[0m${@:2}"
 }
 
-help_message(){
-    case ${1} in
-        "1")    
-            echow "Script will get 'DOMAIN' and 'database' info from .env file, then auto setup virtual host and WordPress site."
-            exit 0
-        ;;
-        "2")
-            echow '✅ Service finished! Enjoy your accelerated LiteSpeed server!'
-            ;;
-    esac       
-}
-
-domain_filter(){
-    if [[ -z "${1}" ]]; then
-        echow "❌ DOMAIN parameter required!"
-        exit 1
-    fi
+domain_filter() {
     DOMAIN="${1#http://}"
     DOMAIN="${DOMAIN#https://}"
-    DOMAIN="${DOMAIN#ftp://}"
     DOMAIN="${DOMAIN%%/*}"
-    [[ -z "$DOMAIN" ]] && { echow "❌ Invalid DOMAIN format!"; exit 1; }
+    [[ -z "$DOMAIN" ]] && { echow "❌ Invalid DOMAIN"; exit 1; }
 }
 
-gen_root_fd(){
+# 1. CREATE DOMAIN DIR
+gen_root_fd() {
     local domain=${1}
-    DOC_FD="./sites/${domain}/"
-    if [[ -d "$DOC_FD" ]]; then
-        echow "[O] Root folder ${DOC_FD} exists."
-    else
-        echow "📁 Creating document root..."
-        bash bin/domain.sh -add "${domain}" || { echow "❌ Failed to create domain dir"; exit 1; }
-        echow "✅ Document root ready."
+    DOC_FD="./sites/${domain}"
+    if [[ ! -d "$DOC_FD" ]]; then
+        echow "📁 Creating ${DOC_FD}..."
+        mkdir -p "$DOC_FD"
+        chown 1000:1000 "$DOC_FD"
     fi
 }
 
-create_db(){
+# 2. SETUP DATABASE (matches your database.sh)
+create_db() {
     local domain=${1}
-    if [[ -z "${MARIADB_DATABASE}" || -z "${MARIADB_USER}" || -z "${MARIADB_PASSWORD}" ]]; then
-        echow "❌ Missing MariaDB credentials in .env!"
-        exit 1
-    fi    
-    bash bin/database.sh -D "${domain}" -U "${MARIADB_USER}" -P "${MARIADB_PASSWORD}" -DB "${MARIADB_DATABASE}" || {
-        echow "❌ Database creation failed!"
-        exit 1
-    }
+    DB_NAME="${MARIADB_DATABASE:-wordpress}_${domain//./_}"
+    echow "📥 Creating database ${DB_NAME}..."
+    ${DOCKER_CMD} exec -i mariadb mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "
+        CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
+        GRANT ALL ON \`${DB_NAME}\`.* TO '${MARIADB_USER:-wordpress}'@'%' IDENTIFIED BY '${MARIADB_PASSWORD:-wordpress}';
+        FLUSH PRIVILEGES;
+    "
 }
 
-store_credential(){
-    if [[ -f "${DOC_FD}/.db_pass" ]]; then
-        echow "[O] Database credentials exist."
-    else
-        echow "💾 Storing database credentials..."
-        cat > "${DOC_FD}/.db_pass" << EOT
-{
-  "Database": "${MARIADB_DATABASE}",
-  "Username": "${MARIADB_USER}",
-  "Password": "${MARIADB_PASSWORD}"
-}
-EOT
-        chmod 600 "${DOC_FD}/.db_pass"
-    fi
+# 3. APPINSTALL VIA CONTAINER
+app_download() {
+    local domain=${1}
+    echow "⬇️  Installing WordPress for ${domain}..."
+    ${COMPOSE_CMD} exec litespeed appinstallctl.sh --app wordpress --domain "${domain}"
 }
 
-app_download(){
-    local app=${1} domain=${2}
-    echow "⬇️  Installing ${app} for ${domain}..."
-    ${COMPOSE_CMD} exec -T "${CONT_NAME}" su -c "appinstallctl.sh --app ${app} --domain ${domain}" || {
-        echow "❌ App installation failed!"
-        exit 1
-    }
-}
-
-lsws_restart(){
+# 4. RESTART LSWS
+lsws_restart() {
     echow "🔄 Restarting LiteSpeed..."
-    bash bin/webadmin.sh -r || { echow "❌ LiteSpeed restart failed!"; exit 1; }
+    ${COMPOSE_CMD} restart litespeed
 }
 
-main(){
-    domain_filter "${DOMAIN}"
-    gen_root_fd "${DOMAIN}"
-    create_db "${DOMAIN}"
-    store_credential "${DOMAIN}"
-    app_download "${APP_NAME}" "${DOMAIN}"
-    lsws_restart
-    help_message 2
-}
+# MAIN
+[[ -z "$1" ]] && { echow "Usage: $0 example.com"; exit 1; }
+domain_filter "$1"
 
-while [[ $# -gt 0 ]]; do
-    case ${1} in
-        -[hH]*|--help|help)
-            help_message 1
-            ;;
-        *)
-            DOMAIN="${1}"
-            shift
-            break
-            ;;
-    esac
-done
+gen_root_fd "$DOMAIN"
+create_db "$DOMAIN"
+app_download "$DOMAIN"
+lsws_restart
 
-[[ -z "$DOMAIN" ]] && help_message 1
-main
+echow "✅ COMPLETE: http://${DOMAIN}"
+echow "   wp-config.php → DB_NAME='${MARIADB_DATABASE:-wordpress}_${DOMAIN//./_}'"
