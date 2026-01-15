@@ -16,7 +16,7 @@ services:
       MARIADB_AUTO_UPGRADE: "1"
     restart: always
     healthcheck:
-      test: ["CMD", "bash", "-c", "mysqladmin ping -h127.0.0.1 -uroot -p\"${MARIADB_ROOT_PASSWORD}\" || exit 1"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MARIADB_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
