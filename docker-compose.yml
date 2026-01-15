@@ -1,28 +1,27 @@
 services:
   mariadb:
-    image: mariadb@sha256:1cac8492bd78b1ec693238dc600be173397efd7b55eabc725abc281dc855b482
-    #                 ↑ 11.8 DIGEST LOCKED - Guaranteed exact version
+    # Allow override from .env (MARIADB_IMAGE). Default to the digest you validated.
+    image: ${MARIADB_IMAGE:-mariadb@sha256:1cac8492bd78b1ec693238dc600be173397efd7b55eabc725abc281dc855b482}
     logging:
       driver: none
     command: ["--max-allowed-packet=512M"]
     volumes:
-      # DUAL COMPATIBILITY - Zero data loss for old users
-      - ./data/db:/var/lib/mysql:delegated     # OLD USERS: Keeps existing data
-      - mariadb_data:/var/lib/mysql            # NEW USERS: Modern named volume
+      # Default to a named volume for new installs. Use docker-compose.hostdb.yml to opt-in host bind.
+      - mariadb_data:/var/lib/mysql
     environment:
-      # FULL BACKWARDS COMPATIBILITY - Both formats work
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-${MARIADB_DATABASE}}
       MYSQL_USER: ${MYSQL_USER:-${MARIADB_USER}}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD}}
-      MARIADB_AUTO_UPGRADE: "1"                # 11.8 upgrade safety
+      MARIADB_AUTO_UPGRADE: "1"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      # Use mysqladmin ping for a reliable readiness probe (requires mysqladmin in image)
+      test: ["CMD", "bash", "-c", "mysqladmin ping -h127.0.0.1 -uroot -p\"${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}\" || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 20
-      start_period: 80s                        # MariaDB 11.8 init time
+      start_period: 80s
     networks:
       - default
 
@@ -58,12 +57,11 @@ services:
       - 7080:7080
     restart: always
     environment:
-      TZ: ${TimeZone}
+      TZ: ${TIMEZONE}
     networks:
       - default
     depends_on:
-      mariadb:
-        condition: service_healthy              # Startup order guaranteed
+      - mariadb
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
@@ -73,17 +71,15 @@ services:
       - 8080:80
     environment:
       PMA_HOST: mariadb
-      # Bonus: Password compatibility (matches script logic)
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
     restart: always
     networks:
       - default
     depends_on:
-      mariadb:
-        condition: service_healthy
+      - mariadb
 
 volumes:
-  mariadb_data:                               # Auto-created for new users
+  mariadb_data:
 
 networks:
   default:
