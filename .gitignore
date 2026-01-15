@@ -1,17 +1,21 @@
 # User secrets & local config
 .env
 
-# Docker data & logs (KEEP YOUR EXISTING)
-data
-latest.yml
-config
-lsws/conf
-certs
-logs/*
+# Docker data & volumes (v1.6 + Legacy)
+data/
+mariadb_data/
+redis/data/
+lsws/
+sites/
+backups/
 
-# Docker volumes
-redis/data/*
-mariadb/data/*
+# Docker logs only (keep structure)
+logs/
+certs/
+
+# Docker state
+latest.yml
+config/
 
 # Editor/IDE files
 .vscode/
