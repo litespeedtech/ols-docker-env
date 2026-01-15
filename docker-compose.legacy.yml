@@ -1,49 +1,30 @@
-# ========================================
-# LEGACY V1 → Latest (ONLY DB storage location maintained from legacy)
-# ========================================
-# Use: docker compose -f docker-compose.legacy.yml up -d
-# Preserves your existing ./data volume
-# ========================================
+version: '3.8'
 
 services:
   mariadb:
-    image: ${MARIADB_IMAGE:-mariadb:lts-noble}
+    image: mariadb:11.4
     logging:
       driver: none
-    command: ["--max-allowed-packet=${MARIADB_PACKET_SIZE:-64M}"]
+    command: ["--max-allowed-packet=512M"]
     volumes:
-      - data:/var/lib/mysql          # ← ONLY CHANGE: your existing data/
+      - data:/var/lib/mysql          # ← ONLY CHANGE: legacy named volume 'data'
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-${MARIADB_DATABASE}}
-      MYSQL_USER: ${MYSQL_USER:-${MARIADB_USER}}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-${MARIADB_PASSWORD}}
-      MARIADB_AUTO_UPGRADE: "1"
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MARIADB_DATABASE}
+      MYSQL_USER: ${MARIADB_USER}
+      MYSQL_PASSWORD: ${MARIADB_PASSWORD}
     restart: always
     healthcheck:
-      test: ["CMD", "bash", "-c", "mysqladmin ping -h127.0.0.1 -uroot -p\"${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}\" || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
-      start_period: 80s
-    networks:
-      - default
-
-  redis:
-    image: ${REDIS_IMAGE:-redis:alpine}
-    logging:
-      driver: none
-    volumes:
-      - ./redis/data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    environment:
-      - REDIS_REPLICATION_MODE=master
-    restart: always
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MARIADB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - default
 
   litespeed:
-    image: ${LITESPEED_IMAGE:-litespeedtech/openlitespeed:1.8.5-lsphp85}
+    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
     container_name: litespeed
     env_file:
       - .env
@@ -61,7 +42,7 @@ services:
       - 7080:7080
     restart: always
     environment:
-      TZ: ${TIMEZONE:-UTC}
+      TZ: ${TimeZone}
     networks:
       - default
     depends_on:
@@ -69,13 +50,14 @@ services:
         condition: service_healthy
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION:-fpm-alpine}
+    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
     env_file:
       - .env
+    ports:
+      - 8080:80
     environment:
       PMA_HOST: mariadb
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD}}
-      PMA_ABSOLUTE_URI: /phpmyadmin/
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
     restart: always
     networks:
       - default
@@ -83,9 +65,21 @@ services:
       mariadb:
         condition: service_healthy
 
+  redis:
+    image: "redis:alpine"
+    logging:
+      driver: none
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    restart: always
+    networks:
+      - default
+
 volumes:
-  data: {}          # ← Named volume preserves your ./data
-  mariadb_data:     # Keep for main compose compatibility
+  data: {}          # ← Named volume preserves legacy setup
 
 networks:
   default:
