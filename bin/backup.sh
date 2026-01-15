@@ -50,9 +50,9 @@ fi
 # 1. Database backup (with progress via pv if available, mysqldump)
 echo "📥 Dumping database ${TARGET_DB}..."
 if command -v pv >/dev/null 2>&1; then
-    ${DOCKER_CMD} exec mysql mysqldump --single-transaction --quick --lock-tables=false "$TARGET_DB" | pv | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
+    ${DOCKER_CMD} exec mariadb mysqldump --single-transaction --quick --lock-tables=false "$TARGET_DB" | pv | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
 else
-    ${DOCKER_CMD} exec mysql mysqldump --single-transaction --quick --lock-tables=false "$TARGET_DB" | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
+    ${DOCKER_CMD} exec mariadb mysqldump --single-transaction --quick --lock-tables=false "$TARGET_DB" | gzip > "${BACKUP_DIR}/${DOMAIN}_db.sql.gz"
 fi
 
 # 2. Site files backup (with progress)
@@ -79,7 +79,7 @@ cat > "${BACKUP_DIR}/restore-info.json" << EOF
     "${DOMAIN}_db.sql.gz",
     "${DOMAIN}_site.tar.gz"
   ],
-  "restore_command": "${COMPOSE_CMD} run --rm mysql mariadb-dump ${DOMAIN} ${FOLDER_NAME##*/}",
+  "restore_command": "${COMPOSE_CMD} run --rm mariadb mariadb-dump ${DOMAIN} ${FOLDER_NAME##*/}",
   "docker_cmd": "${DOCKER_CMD}"
 }
 EOF

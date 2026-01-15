@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  mysql:
+  mariadb:
     image: mariadb:11.4
     logging:
       driver: none
@@ -46,7 +46,7 @@ services:
     networks:
       - default
     depends_on:
-      mysql:
+      mariadb:
         condition: service_healthy
 
   phpmyadmin:
@@ -56,13 +56,13 @@ services:
     ports:
       - 8080:80
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: mariadb
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
     restart: always
     networks:
       - default
     depends_on:
-      mysql:
+      mariadb:
         condition: service_healthy
 
   redis:

@@ -36,13 +36,13 @@ bash "$(dirname "$0")/backup.sh" "${SOURCE_DOMAIN}" "Pre-Copy-AutoSave"
 # 1. Create new database (quoted, safe)
 NEW_DB="${MARIADB_DATABASE}_${NEW_DOMAIN//./_}"
 echo "📥 Creating database ${NEW_DB}..."
-${DOCKER_CMD} exec -i mysql mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${NEW_DB}\`"
+${DOCKER_CMD} exec -i mariadb mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${NEW_DB}\`"
 
 # 2. Copy database (mysqldump → mysql pipe, quoted)
 SOURCE_DB=$(grep "DB_NAME" "./sites/${SOURCE_DOMAIN}/wp-config.php" 2>/dev/null | cut -d\' -f4 || echo "${MARIADB_DATABASE}")
 echo "📋 Copying database ${SOURCE_DB} → ${NEW_DB}..."
-${DOCKER_CMD} exec mysql mysqldump --single-transaction --quick "${SOURCE_DB}" | \
-${DOCKER_CMD} exec -i mysql mysql "${NEW_DB}"
+${DOCKER_CMD} exec mariadb mysqldump --single-transaction --quick "${SOURCE_DB}" | \
+${DOCKER_CMD} exec -i mariadb mysql "${NEW_DB}"
 
 # 3. Copy files (atomic move if target exists)
 if [[ -d "./sites/${NEW_DOMAIN}" ]]; then
@@ -65,7 +65,7 @@ sed -i "s|DB_NAME', '.*'|DB_NAME', '${NEW_DB}'|" ./sites/${NEW_DOMAIN}/wp-config
 
 # 6. Database URL cleanup (safety net)
 echo "🔄 Final DB URL cleanup..."
-${DOCKER_CMD} exec -i mysql mysql "${NEW_DB}" -e "
+${DOCKER_CMD} exec -i mariadb mysql "${NEW_DB}" -e "
   UPDATE wp_options SET option_value = REPLACE(option_value, '${SOURCE_DOMAIN}', '${NEW_DOMAIN}') 
   WHERE option_name = 'home' OR option_name = 'siteurl';
   UPDATE wp_posts SET guid = REPLACE(guid, '${SOURCE_DOMAIN}', '${NEW_DOMAIN}');
@@ -75,7 +75,7 @@ ${DOCKER_CMD} exec -i mysql mysql "${NEW_DB}" -e "
 
 # 7. Optimize tables
 echo "⚡ Optimizing database..."
-${DOCKER_CMD} exec -i mysql mysql "${NEW_DB}" -e "
+${DOCKER_CMD} exec -i mariadb mysql "${NEW_DB}" -e "
   OPTIMIZE TABLE wp_posts;
   OPTIMIZE TABLE wp_postmeta; 
   OPTIMIZE TABLE wp_options;

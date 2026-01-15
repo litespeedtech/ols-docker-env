@@ -19,12 +19,12 @@ SQL_PASS=${MARIADB_PASSWORD:-wordpress}
 ROOT_PASS=${MARIADB_ROOT_PASSWORD}
 
 check_db_access() {
-    ${DOCKER_CMD} exec mysql mysql -uroot -p"${ROOT_PASS}" -e "status" >/dev/null 2>&1
+    ${DOCKER_CMD} exec mariadb mysql -uroot -p"${ROOT_PASS}" -e "status" >/dev/null 2>&1
 }
 
 db_setup() {
     echo "📥 Creating database '${SQL_DB}' for ${DOMAIN}..."
-    ${DOCKER_CMD} exec -i mysql mysql -uroot -p"${ROOT_PASS}" -e "
+    ${DOCKER_CMD} exec -i mariadb mysql -uroot -p"${ROOT_PASS}" -e "
         CREATE DATABASE IF NOT EXISTS \`${SQL_DB}\`;
         GRANT ALL PRIVILEGES ON \`${SQL_DB}\`.* TO '${SQL_USER}'@'%' IDENTIFIED BY '${SQL_PASS}';
         FLUSH PRIVILEGES;

@@ -40,7 +40,7 @@ create_db() {
     local domain=${1}
     DB_NAME="${MARIADB_DATABASE:-wordpress}_${domain//./_}"
     echow "📥 Creating database ${DB_NAME}..."
-    ${DOCKER_CMD} exec -i mysql mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "
+    ${DOCKER_CMD} exec -i mariadb mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "
         CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
         GRANT ALL ON \`${DB_NAME}\`.* TO '${MARIADB_USER:-wordpress}'@'%' IDENTIFIED BY '${MARIADB_PASSWORD:-wordpress}';
         FLUSH PRIVILEGES;

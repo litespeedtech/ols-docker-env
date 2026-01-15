@@ -8,7 +8,7 @@ WWW_UID=''
 WWW_GID=''
 WPCONSTCONF=''
 PUB_IP=$(curl -s http://checkip.amazonaws.com)
-DB_HOST='mysql'
+DB_HOST='mariadb'
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
 EPACE='        '
@@ -95,7 +95,7 @@ set_vh_docroot(){
 check_mariadb_native(){
         local COUNTER=0
         local LIMIT_NUM=100
-        until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
+        until [ "$(curl -v mariadb:3306 2>&1 | grep -i 'native\|Connected')" ]; do
                 echo "Counter: ${COUNTER}/${LIMIT_NUM}"
                 COUNTER=$((COUNTER+1))
                 if [ ${COUNTER} = 10 ]; then
