@@ -1,9 +1,11 @@
 services:
   mysql:
-    image: mariadb:11.4
+    image: ${MARIADB_IMAGE:-mariadb:lts-noble}
     logging:
       driver: none
-    command: ["--max-allowed-packet=512M"]
+    command:
+      - "--max-allowed-packet=512M"              # Original dev's proven value
+      - "--max-connections=${MARIADB_MAX_CONNS:-200}"  # 200 default, 400 for 8GB+
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
     environment:
@@ -14,8 +16,9 @@ services:
     restart: always
     networks:
       - default
+
   litespeed:
-    image: litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}
+    image: litespeedtech/openlitespeed:${LITESPEED_IMAGE:-1.8.5-lsphp85}
     container_name: litespeed
     env_file:
       - .env
@@ -33,11 +36,12 @@ services:
       - 7080:7080
     restart: always
     environment:
-      TZ: ${TimeZone}
+      TZ: ${TIMEZONE}
     networks:
       - default
+
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
+    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_IMAGE:-phpmyadmin:latest}
     env_file:
       - .env
     ports:
@@ -47,11 +51,12 @@ services:
     restart: always
     networks:
       - default
+
   redis:
-    image: "redis:alpine"
+    image: ${REDIS_IMAGE:-redis:alpine}
     logging:
       driver: none
-    # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
+    # No command = maxmemory 0 (unbounded, your proven production default)
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
@@ -60,6 +65,7 @@ services:
     restart: always
     networks:
       - default
+
 networks:
   default:
     driver: bridge
