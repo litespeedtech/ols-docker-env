@@ -41,7 +41,7 @@ services:
       - default
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_IMAGE:-phpmyadmin:latest}
+    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_IMAGE:-latest}
     env_file:
       - .env
     ports:
