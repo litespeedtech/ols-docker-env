@@ -56,7 +56,7 @@ services:
     image: ${REDIS_IMAGE:-redis:alpine}
     logging:
       driver: none
-    # No command = maxmemory 0 (unbounded, your proven production default)
+    # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
