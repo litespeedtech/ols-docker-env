@@ -46,7 +46,7 @@ The docker image installs the following packages on your system:
 |MariaDB|[Latest Stable version: 13.0 LTS](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
-|ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
+|ACME|[OpenLiteSpeed built-in ACME](https://docs.openlitespeed.org/config/advanced/acme/), using [acme.sh](https://github.com/acmesh-official/acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
 |phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/phpmyadmin/phpmyadmin/)|
 |Redis|[Latest from dockerhub](https://hub.docker.com/_/redis/)|
@@ -67,6 +67,7 @@ Cloned project
 │   ├── lsrestart.log
 │   └── stderr.log
 ├── lsws
+│   ├── acme
 │   ├── admin-conf
 │   └── conf
 ├── sites
@@ -76,7 +77,9 @@ Cloned project
 └── docker-compose.yml
 ```
 
-* `acme` contains all applied certificates from Lets Encrypt
+* `acme` contains certificates applied by older versions of `bin/acme.sh`
+
+* `lsws/acme` contains the acme.sh copy used by OpenLiteSpeed ACME, and `lsws/conf/cert/acme` its account and certificates
 
 * `bin` contains multiple CLI scripts to allow you add or delete virtual hosts, install applications, upgrade, etc
 
@@ -178,6 +181,8 @@ Go to [WordPress > LSCache Plugin > Cache > Object](https://docs.litespeedtech.c
 
 ### Install ACME
 
+Certificates are requested and renewed by [OpenLiteSpeed ACME](https://docs.openlitespeed.org/config/advanced/acme/). It needs the `./lsws/acme:/usr/local/lsws/acme` volume from `docker-compose.yml`, so run `docker compose up -d` after updating this project.
+
 We need to run the ACME installation command the **first time only**.
 With email notification:
 
@@ -187,23 +192,39 @@ bash bin/acme.sh [-I, --install] [-E, --email] EMAIL_ADDR
 
 ### Applying a Let's Encrypt Certificate
 
-Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
+Use the root domain in this command. It must already be added with `bin/domain.sh`, and its DNS must point to this server with port 80 open:
 
 ```bash
 bash bin/acme.sh [-D, --domain] example.com
 ```
 
+The domain is moved to the `dockerAcme` template, OpenLiteSpeed is restarted and requests the certificate, and the script waits for the result. Certificates are stored in `lsws/conf/cert/acme/certs`.
+
+`www.example.com` is added to the certificate when OpenLiteSpeed can reach it, otherwise the certificate is issued for `example.com` only and `www` is added at a later renewal once it is reachable. This needs an OpenLiteSpeed version with optional `www` support; with older versions `www.example.com` must resolve and reach this server, or no certificate is issued.
+
+Notes:
+
+* OpenLiteSpeed checks `www` from inside the container through the address it resolves to, so the host or router must allow connecting back to its own public address.
+
+* If a domain has an AAAA record, it must reach this server over IPv6 too.
+
+* OpenLiteSpeed checks the certificates daily and renews them when they are due, but serves a renewed certificate after its next restart. Restart it regularly from the host's crontab, for example weekly: `0 3 * * 0 cd /path/to/ols-docker-env && bash bin/webadmin.sh -R`
+
+* Certificates from older versions of this script were stored in `acme`, and were not renewed because the container does not run cron. Run `bash bin/acme.sh -D example.com` again to switch a domain to OpenLiteSpeed ACME.
+
 Other parameters:
 
-* [`-r`, `--renew`]: Renew a specific domain with -D or --domain parameter if posibile. To force renew, use -f parameter.
+* [`-r`, `--renew`]: Renew a specific domain with -D or --domain parameter if it is due. To force renew, use -f parameter.
 
-* [`-R`, `--renew-all`]: Renew all domains if possible. To force renew, use -f parameter.  
+* [`-R`, `--renew-all`]: Renew all domains if they are due. To force renew, use -f parameter.  
 
 * [`-f`, `-F`, `--force`]: Force renew for a specific domain or all domains.
 
-* [`-v`, `--revoke`]: Revoke a domain.  
+* [`-v`, `--revoke`]: Revoke the certificate of a domain and move it back to the `docker` template.  
 
-* [`-V`, `--remove`]: Remove a domain.
+* [`-V`, `--remove`]: Move a domain back to the `docker` template. OpenLiteSpeed deletes its unused certificate at the next start.
+
+* [`-U`, `--uninstall`]: Move all domains back to the `docker` template and uninstall OpenLiteSpeed ACME.
 
 ### Using mkcert for Local Development SSL
 
