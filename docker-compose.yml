@@ -22,6 +22,7 @@ services:
     volumes:
       - ./lsws/conf:/usr/local/lsws/conf
       - ./lsws/admin-conf:/usr/local/lsws/admin/conf
+      - ./lsws/acme:/usr/local/lsws/acme
       - ./bin/container:/usr/local/bin
       - ./sites:/var/www/vhosts/
       - ./acme:/root/.acme.sh/
